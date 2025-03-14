@@ -1,0 +1,696 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SportsPro - Premium Sports Equipment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #1a73e8 0%, #00796b 100%);
+        padding: 5rem 0;
+        color: white;
+        margin-top: -3rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80') no-repeat center center;
+        background-size: cover;
+        opacity: 0.2;
+    }
+    
+    .feature-card {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-color);
+        color: white;
+        font-size: 1.5rem;
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+    }
+    
+    .product-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+    }
+    
+    .product-img-container {
+        position: relative;
+        overflow: hidden;
+        height: 200px;
+    }
+    
+    .product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .product-card:hover .product-overlay {
+        opacity: 1;
+    }
+    
+    .product-action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 5px;
+        color: var(--primary-color);
+        transition: all 0.3s ease;
+    }
+    
+    .product-action-btn:hover {
+        background-color: var(--accent-color);
+        color: white;
+    }
+    
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--accent-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .category-card {
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        height: 150px;
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+    
+    .category-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.8);
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover .category-img {
+        filter: brightness(0.6);
+        transform: scale(1.1);
+    }
+    
+    .category-name {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 15px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        color: white;
+        font-weight: bold;
+    }
+    
+    .collection-banner {
+        height: 350px;
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+    
+    .collection-banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.8s ease;
+    }
+    
+    .collection-banner:hover img {
+        transform: scale(1.05);
+    }
+    
+    .collection-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 30px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        color: white;
+    }
+    
+    .brand-logo {
+        height: 60px;
+        padding: 10px;
+        filter: grayscale(100%);
+        opacity: 0.6;
+        transition: all 0.3s ease;
+    }
+    
+    .brand-logo:hover {
+        filter: grayscale(0%);
+        opacity: 1;
+    }
+    
+    .testimonial-card {
+        border-radius: 10px;
+        background-color: #fff;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+    
+    .testimonial-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+        border: 3px solid var(--primary-color);
+    }
+    
+    .sport-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+    
+    .btn-sports {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+        color: white;
+    }
+    
+    .btn-sports:hover {
+        background-color: #e65100;
+        border-color: #e65100;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .trending-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--primary-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Gear Up for Victory</h1>
+                <p class="lead mb-4">Professional sports equipment for athletes of all levels. From beginners to pros, find everything you need to excel in your sport.</p>
+                <div class="d-flex gap-3"></div>
+                    <a href="{% url 'users:product_list' %}" class="btn btn-light btn-lg px-4">
+                        <i class="fas fa-shopping-bag me-2"></i>Shop Now
+                    </a>
+                    <a href="#featured" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-star me-2"></i>Featured Gear
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="text-center">
+                    <img src="{% static 'images/hero-sports.png' %}" alt="Sports Equipment" class="img-fluid" onerror="this.src='https://via.placeholder.com/600x400?text=SportsPro';this.onerror='';">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Sports Categories -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col text-center">
+                <div class="p-3">
+                    <div class="sport-icon">
+                        <i class="fas fa-futbol"></i>
+                    </div>
+                    <h6 class="mb-0">Football</h6>
+                </div>
+            </div>
+            <div class="col text-center">
+                <div class="p-3">
+                    <div class="sport-icon">
+                        <i class="fas fa-basketball-ball"></i>
+                    </div>
+                    <h6 class="mb-0">Basketball</h6>
+                </div>
+            </div>
+            <div class="col text-center">
+                <div class="p-3">
+                    <div class="sport-icon">
+                        <i class="fas fa-running"></i>
+                    </div>
+                    <h6 class="mb-0">Running</h6>
+                </div>
+            </div>
+            <div class="col text-center">
+                <div class="p-3">
+                    <div class="sport-icon">
+                        <i class="fas fa-table-tennis"></i>
+                    </div>
+                    <h6 class="mb-0">Tennis</h6>
+                </div>
+            </div>
+            <div class="col text-center">
+                <div class="p-3">
+                    <div class="sport-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h6 class="mb-0">Fitness</h6>
+                </div>
+            </div>
+            <div class="col text-center">
+                <div class="p-3">
+                    <div class="sport-icon">
+                        <i class="fas fa-swimmer"></i>
+                    </div>
+                    <h6 class="mb-0">Swimming</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="feature-card p-4 text-center">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h5>Fast Delivery</h5>
+                    <p class="text-muted mb-0">Free shipping on orders over $50</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-card p-4 text-center">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <h5>Quality Guarantee</h5>
+                    <p class="text-muted mb-0">Professional-grade equipment</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-card p-4 text-center">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h5>30-Day Returns</h5>
+                    <p class="text-muted mb-0">No questions asked policy</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="feature-card p-4 text-center">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h5>Expert Support</h5>
+                    <p class="text-muted mb-0">Sports specialists available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="py-5 bg-light" id="featured">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Featured Sports Gear</h2>
+            <p class="text-muted">Discover top-rated equipment trusted by professional athletes</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in featured_products %}
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="product-card">
+                        <div class="product-img-container">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x300?text=Sports+Gear" class="product-img" alt="{{ product.name }}">
+                            {% endif %}
+                            
+                            {% if product.get_discount_price < product.price %}
+                                {% with discount_percent=product.discounts.first.discount_percent|default:"10" %}
+                                <div class="discount-badge">-{{ discount_percent }}%</div>
+                                {% endwith %}
+                            {% endif %}
+                            
+                            <div class="product-overlay">
+                                <a href="{% url 'users:product_detail' product.slug %}" class="product-action-btn">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                <form method="post" action="{% url 'users:add_to_cart' product.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="product-action-btn border-0">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </button>
+                                </form>
+                                
+                                <form method="post" action="{% url 'users:toggle_wishlist' product.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="product-action-btn border-0">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <span class="badge bg-secondary mb-2">{{ product.category.name }}</span>
+                            <h6 class="mb-1">{{ product.name }}</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if product.get_discount_price < product.price %}
+                                        <span class="text-danger fw-bold">${{ product.get_discount_price }}</span>
+                                        <small class="text-muted text-decoration-line-through">${{ product.price }}</small>
+                                    {% else %}
+                                        <span class="fw-bold">${{ product.price }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-warning">
+                                    <i class="fas fa-star"></i>
+                                    <small>{{ product.rating|default:"4.8" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-running fa-4x text-muted mb-3"></i>
+                    <h4>No products available</h4>
+                    <p class="text-muted">We're restocking our sports equipment. Please check back later.</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-5">
+            <a href="{% url 'users:product_list' %}" class="btn btn-sports btn-lg">
+                <i class="fas fa-th-list me-2"></i>Browse All Equipment
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Special Collections -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Special Collections</h2>
+            <p class="text-muted">Explore our curated collections for specific sports</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="collection-banner">
+                    <img src="https://images.unsplash.com/photo-1517649763962-0c623066013b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80" alt="Football Collection">
+                    <div class="collection-content">
+                        <h3>Football Essentials</h3>
+                        <p class="mb-3">Everything you need for the beautiful game</p>
+                        <a href="#" class="btn btn-sports">Explore Collection</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="collection-banner">
+                    <img src="https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80" alt="Fitness Collection">
+                    <div class="collection-content">
+                        <h3>Home Gym Collection</h3>
+                        <p class="mb-3">Professional equipment for your fitness journey</p>
+                        <a href="#" class="btn btn-sports">Explore Collection</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- New Arrivals -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">New Arrivals</h2>
+            <p class="text-muted">The latest additions to our sports equipment catalog</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in new_arrivals %}
+                <div class="col-6 col-md-3">
+                    <div class="product-card">
+                        <div class="product-img-container">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x300?text=New+Arrival" class="product-img" alt="{{ product.name }}">
+                            {% endif %}
+                            <div class="trending-badge">
+                                <i class="fas fa-bolt me-1"></i>New
+                            </div>
+                            <div class="product-overlay">
+                                <a href="{% url 'users:product_detail' product.slug %}" class="product-action-btn">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="mb-1">{{ product.name }}</h6>
+                            <p class="text-muted small mb-2">{{ product.brand|title }}</p>
+                            <div class="fw-bold">${{ product.price }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <!-- Show featured products if new_arrivals is empty -->
+                {% for product in featured_products|slice:":4" %}
+                    <div class="col-6 col-md-3">
+                        <div class="product-card">
+                            <div class="product-img-container">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300x300?text=New+Arrival" class="product-img" alt="{{ product.name }}">
+                                {% endif %}
+                                <div class="trending-badge">
+                                    <i class="fas fa-bolt me-1"></i>New
+                                </div>
+                                <div class="product-overlay">
+                                    <a href="{% url 'users:product_detail' product.slug %}" class="product-action-btn">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="mb-1">{{ product.name }}</h6>
+                                <p class="text-muted small mb-2">{{ product.brand|title }}</p>
+                                <div class="fw-bold">${{ product.price }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Shop by Category</h2>
+            <p class="text-muted">Find the perfect equipment for your sport</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for category in categories %}
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{% url 'users:product_list_by_category' category.slug %}" class="text-decoration-none">
+                        <div class="category-card">
+                            {% if category.image %}
+                                <img src="{{ category.image.url }}" class="category-img" alt="{{ category.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x150?text=Sports" class="category-img" alt="{{ category.name }}">
+                            {% endif %}
+                            <div class="category-name">{{ category.name }}</div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center py-4">
+                    <p class="text-muted">Categories coming soon.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">What Athletes Say</h2>
+            <p class="text-muted">Don't just take our word for it</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <img src="https://via.placeholder.com/150?text=Athlete" class="testimonial-img" alt="Testimonial">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="mb-3">"The quality of SportsPro's running shoes is exceptional. I've been using them for my marathon training and they provide perfect support and comfort."</p>
+                    <h6 class="mb-0">Michael Johnson</h6>
+                    <small class="text-muted">Marathon Runner</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <img src="https://via.placeholder.com/150?text=Athlete" class="testimonial-img" alt="Testimonial">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="mb-3">"As a basketball coach, I always recommend SportsPro to my team. Their equipment is durable, professional-grade, and their customer service is outstanding."</p>
+                    <h6 class="mb-0">Sarah Williams</h6>
+                    <small class="text-muted">Basketball Coach</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <img src="https://via.placeholder.com/150?text=Athlete" class="testimonial-img" alt="Testimonial">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="mb-3">"I've been purchasing my tennis equipment from SportsPro for years. Their racquets and accessories are top-notch and have significantly improved my game."</p>
+                    <h6 class="mb-0">David Martinez</h6>
+                    <small class="text-muted">Tennis Player</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Brands We Carry -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3>Trusted Sports Brands</h3>
+            <p class="text-muted">We partner with the best to bring you quality equipment</p>
+        </div>
+        
+        <div class="row align-items-center">
+            <div class="col-4 col-md-2 text-center mb-4">
+                <img src="https://via.placeholder.com/150x80?text=Nike" class="brand-logo img-fluid" alt="Nike">
+            </div>
+            <div class="col-4 col-md-2 text-center mb-4">
+                <img src="https://via.placeholder.com/150x80?text=Adidas" class="brand-logo img-fluid" alt="Adidas">
+            </div>
+            <div class="col-4 col-md-2 text-center mb-4">
+                <img src="https://via.placeholder.com/150x80?text=Puma" class="brand-logo img-fluid" alt="Puma">
+            </div>
+            <div class="col-4 col-md-2 text-center mb-4">
+                <img src="https://via.placeholder.com/150x80?text=Under+Armour" class="brand-logo img-fluid" alt="Under Armour">
+            </div>
+            <div class="col-4 col-md-2 text-center mb-4">
+                <img src="https://via.placeholder.com/150x80?text=New+Balance" class="brand-logo img-fluid" alt="New Balance">
+            </div>
+            <div class="col-4 col-md-2 text-center mb-4">
+                <img src="https://via.placeholder.com/150x80?text=Wilson" class="brand-logo img-fluid" alt="Wilson">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Signup -->
+<section class="py-4 border-top bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h4>Join Our Sports Community</h4>
+                <p>Get the latest news on sports equipment, training tips, and exclusive offers!</p>
+                <div class="input-group mb-3 w-75 mx-auto">
+                    <input type="email" class="form-control" placeholder="Enter your email address">
+                    <button class="btn btn-sports" type="button">Subscribe</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

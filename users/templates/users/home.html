@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SportsPro - Premium Sports Equipment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #1a73e8 0%, #00796b 100%);
+        padding: 5rem 0;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80') no-repeat center center;
+        background-size: cover;
+        opacity: 0.2;
+    }
+    
+    .product-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+    }
+    
+    .product-img-container {
+        position: relative;
+        height: 200px;
+    }
+    
+    .product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--accent-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .category-card {
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        height: 150px;
+    }
+    
+    .category-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .category-name {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 15px;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        color: white;
+        font-weight: bold;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-color);
+        color: white;
+        font-size: 1.5rem;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        margin-inline: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Gear Up for Victory</h1>
+                <p class="lead mb-4">Professional sports equipment for athletes of all levels.</p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'users:product_list' %}" class="btn btn-light btn-lg px-4">
+                        <i class="fas fa-shopping-bag me-2"></i>Shop Now
+                    </a>
+                    <a href="#featured" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-star me-2"></i>Featured
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <img src="https://via.placeholder.com/600x400?text=Sports+Equipment" class="img-fluid" alt="Sports Equipment">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Sports Categories -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            {% for sport in "Football,Basketball,Running,Tennis,Fitness,Swimming"|split:"," %}
+            <div class="col text-center">
+                <div class="p-3">
+                    <div class="sport-icon">
+                        <i class="fas fa-{% if sport == 'Football' %}futbol{% elif sport == 'Basketball' %}basketball-ball{% elif sport == 'Running' %}running{% elif sport == 'Tennis' %}table-tennis{% elif sport == 'Fitness' %}dumbbell{% elif sport == 'Swimming' %}swimmer{% endif %}"></i>
+                    </div>
+                    <h6 class="mb-0">{{ sport }}</h6>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <h5>Fast Delivery</h5>
+                        <p class="text-muted">Free shipping on orders over $50</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <h5>Quality Guarantee</h5>
+                        <p class="text-muted">Professional-grade equipment</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <h5>30-Day Returns</h5>
+                        <p class="text-muted">No questions asked</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <h5>Expert Support</h5>
+                        <p class="text-muted">Sports specialists available</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="py-5 bg-light" id="featured">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Featured Sports Gear</h2>
+            <p class="text-muted">Top-rated equipment trusted by professionals</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in featured_products|slice:":8" %}
+                <div class="col-6 col-md-3">
+                    <div class="card product-card shadow-sm">
+                        <div class="product-img-container">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x300?text=Product" class="product-img" alt="{{ product.name }}">
+                            {% endif %}
+                            
+                            {% if product.discounts.exists %}
+                                <div class="discount-badge">-{{ product.discounts.first.discount_percent }}%</div>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">${{ product.price }}</span>
+                                </div>
+                                <a href="{% url 'users:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">No featured products available at the moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'users:product_list' %}" class="btn btn-sports">
+                <i class="fas fa-th-list me-2"></i>Browse All Equipment
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Categories -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Shop by Category</h2>
+            <p class="text-muted">Find the perfect equipment for your sport</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for category in categories %}
+                <div class="col-6 col-md-4 col-lg-2">
+                    <a href="{% url 'users:product_list_by_category' category.slug %}" class="text-decoration-none">
+                        <div class="category-card shadow-sm">
+                            {% if category.image %}
+                                <img src="{{ category.image.url }}" class="category-img" alt="{{ category.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x150?text={{ category.name }}" class="category-img" alt="{{ category.name }}">
+                            {% endif %}
+                            <div class="category-name">{{ category.name }}</div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center">
+                    <p class="text-muted">Categories coming soon.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- New Arrivals -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">New Arrivals</h2>
+            <p class="text-muted">The latest additions to our catalog</p>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in new_arrivals %}
+                <div class="col-6 col-md-3">
+                    <div class="card product-card shadow-sm">
+                        <div class="product-img-container">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x300?text=New+Arrival" class="product-img" alt="{{ product.name }}">
+                            {% endif %}
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-primary">New</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold">${{ product.price }}</span>
+                                </div>
+                                <a href="{% url 'users:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12 text-center">
+                    <p class="text-muted">New products coming soon.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Brands Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h3>Trusted Sports Brands</h3>
+            <p class="text-muted">We partner with the best to bring you quality</p>
+        </div>
+        
+        <div class="row align-items-center justify-content-center">
+            {% for brand in "Nike,Adidas,Puma,Under Armour,New Balance,Wilson"|split:"," %}
+                <div class="col-4 col-md-2 text-center mb-4">
+                    <img src="https://via.placeholder.com/150x80?text={{ brand }}" 
+                         class="img-fluid opacity-75 hover-opacity-100" 
+                         alt="{{ brand }}">
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

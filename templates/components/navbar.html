@@ -1,0 +1,114 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'core:homepage' %}">
+            <i class="bi bi-lightning-charge-fill text-primary me-2"></i>
+            <span class="fw-bold">EV Charging</span>
+        </a>
+
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navigation Items -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
+                       href="{% url 'core:homepage' %}">
+                        Home
+                    </a>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                           href="{% url 'users:dashboard' %}">
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'booking_list' %}active{% endif %}" 
+                           href="{% url 'users:booking_list' %}">
+                            My Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'vehicle_list' %}active{% endif %}" 
+                           href="{% url 'users:vehicle_list' %}">
+                            My Vehicles
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            <!-- Right Side Items -->
+            <ul class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <!-- Notifications -->
+                    <li class="nav-item me-3">
+                        <a href="{% url 'users:notifications' %}" class="nav-link position-relative">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                                  id="notification-badge" {% if not unread_notifications %} style ="display: none;"{% endif %}>
+                                {{ unread_notifications|default:"0" }}
+                            </span>
+                        </a>
+                    </li>
+
+                    <!-- Quick Book Button -->
+                    <li class="nav-item me-3">
+                        <a href="{% url 'users:create_booking' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> New Booking
+                        </a>
+                    </li>
+
+                    <!-- User Profile Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>
+                            {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:dashboard' %}">
+                                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:profileUpdate' %}">
+                                    <i class="bi bi-person me-2"></i>Update Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:passwordUpdate' %}">
+                                    <i class="bi bi-shield-lock me-2"></i>Change Password
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'users:logout' %}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item me-2">
+                        <a href="{% url 'users:login' %}" class="btn btn-outline-primary btn-sm">
+                            Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'users:register' %}" class="btn btn-primary btn-sm">
+                            Register
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Login - SportsPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'users/css/style.css' %}">
+<style>
+    .auth-container {
+        background-color: var(--light-bg);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .auth-header {
+        background-color: var(--primary-color);
+        color: white;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding: 20px;
+    }
+    
+    .btn-sports-auth {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+        color: white;
+        padding: 10px 20px;
+    }
+    
+    .btn-sports-auth:hover {
+        background-color: #e65100;
+        border-color: #e65100;
+        color: white;
+    }
+    
+    .social-login-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 5px;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="auth-container">
+                <div class="auth-header text-center">
+                    <h2><i class="fas fa-sign-in-alt me-2"></i>Login to SportsPro</h2>
+                </div>
+                
+                <div class="p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" class="mb-3">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe">
+                                <label class="form-check-label" for="rememberMe">Remember me</label>
+                            </div>
+                            <a href="#" class="text-decoration-none">Forgot password?</a>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-sports-auth">
+                                <i class="fas fa-lock-open me-2"></i>Login
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center my-3">
+                        <p>Or login with</p>
+                        <div>
+                            <a href="#" class="social-login-btn bg-primary"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-login-btn bg-danger"><i class="fab fa-google"></i></a>
+                            <a href="#" class="social-login-btn bg-info"><i class="fab fa-twitter"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <p>Don't have an account? <a href="{% url 'users:register' %}" class="text-decoration-none fw-bold">Register here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

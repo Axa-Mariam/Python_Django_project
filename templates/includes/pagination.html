@@ -1,0 +1,147 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pagination-container">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <!-- Previous Page -->
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" aria-label="First">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Previous">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-left"></i>
+                    </span>
+                </li>
+            {% endif %}
+
+            <!-- Page Numbers -->
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Next Page -->
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Next">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" aria-label="Last">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Page Info -->
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} entries
+        </small>
+    </div>
+
+    <!-- Page Size Selector -->
+    <div class="text-center mt-3">
+        <div class="input-group input-group-sm justify-content-center">
+            <span class="input-group-text">Show</span>
+            <select class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
+                {% for size in '10,25,50,100'|split:',' %}
+                    <option value="{{ size }}" {% if request.GET.page_size == size %}selected{% endif %}>
+                        {{ size }}
+                    </option>
+                {% endfor %}
+            </select>
+            <span class="input-group-text">entries</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pagination-container {
+        margin: 2rem 0;
+    }
+
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+        color: #0d6efd;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s;
+    }
+
+    .pagination .page-link:hover {
+        z-index: 2;
+        color: #0a58ca;
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    .pagination .page-item.active .page-link {
+        z-index: 3;
+        color: #fff;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+</style>
+
+<script>
+function changePageSize(size) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page_size', size);
+    urlParams.set('page', '1'); // Reset to first page when changing page size
+    window.location.search = urlParams.toString();
+}
+
+// Custom template filter simulation for the split filter
+function split(str, sep) {
+    return str.split(sep);
+}
+</script>
+{% endif %}

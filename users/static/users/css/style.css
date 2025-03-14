@@ -1,0 +1,28 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.bg-image {
+    background-color: red;
+    background: url('../images/background.jpg') no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+}
+
+.card-transparent {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.bg-shape {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 123, 255, 0.2);
+}

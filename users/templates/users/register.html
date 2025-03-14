@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register - SportsPro{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'users/css/style.css' %}">
+<style>
+    .bg-image {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        min-height: calc(100vh - 56px - 173px); /* Accounting for navbar and footer */
+    }
+    
+    .card-transparent {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .bg-shape {
+        background: linear-gradient(45deg, #2575fc 0%, #6a11cb 100%);
+        color: white;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #2575fc 0%, #6a11cb 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(37, 117, 252, 0.4);
+    }
+
+    .auth-container {
+        background-color: var(--light-bg);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    
+    .auth-header {
+        background-color: var(--primary-color);
+        color: white;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding: 20px;
+    }
+    
+    .btn-sports-auth {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+        color: white;
+        padding: 10px 20px;
+    }
+    
+    .btn-sports-auth:hover {
+        background-color: #e65100;
+        border-color: #e65100;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="auth-container">
+                <div class="auth-header text-center">
+                    <h2><i class="fas fa-user-plus me-2"></i>Join SportsPro</h2>
+                </div>
+                
+                <div class="p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-sports-auth">
+                                <i class="fas fa-user-check me-2"></i>Register
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="{% url 'users:login' %}" class="text-decoration-none fw-bold">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client-side validation for email and mobile fields
+    document.addEventListener('DOMContentLoaded', function() {
+        const emailInput = document.getElementById('id_email');
+        const mobileInput = document.getElementById('id_mobile');
+        
+        if (emailInput) {
+            emailInput.addEventListener('blur', function() {
+                const email = this.value;
+                if (email && !email.endsWith('@example.com')) {
+                    this.classList.add('is-invalid');
+                    if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('invalid-feedback')) {
+                        const feedback = document.createElement('div');
+                        feedback.classList.add('invalid-feedback');
+                        feedback.textContent = 'Email must be from the domain @example.com';
+                        this.parentNode.appendChild(feedback);
+                    }
+                } else {
+                    this.classList.remove('is-invalid');
+                    const feedback = this.nextElementSibling;
+                    if (feedback && feedback.classList.contains('invalid-feedback')) {
+                        feedback.remove();
+                    }
+                }
+            });
+        }
+        
+        if (mobileInput) {
+            mobileInput.addEventListener('blur', function() {
+                const mobile = this.value;
+                const mobilePattern = /^\+?[0-9\s\-]{10,15}$/;
+                if (mobile && !mobilePattern.test(mobile)) {
+                    this.classList.add('is-invalid');
+                    if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('invalid-feedback')) {
+                        const feedback = document.createElement('div');
+                        feedback.classList.add('invalid-feedback');
+                        feedback.textContent = 'Enter a valid mobile number (digits, spaces, dashes allowed, 10-15 characters)';
+                        this.parentNode.appendChild(feedback);
+                    }
+                } else {
+                    this.classList.remove('is-invalid');
+                    const feedback = this.nextElementSibling;
+                    if (feedback && feedback.classList.contains('invalid-feedback')) {
+                        feedback.remove();
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

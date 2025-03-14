@@ -1,0 +1,113 @@
+{% if messages %}
+<div class="messages-container position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 1050;">
+    {% for message in messages %}
+        <div class="toast align-items-center border-0 show mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="bi bi-exclamation-circle-fill text-danger me-2"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    {% elif message.tags == 'info' %}
+                        <i class="bi bi-info-circle-fill text-info me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            {% if message.tags %}
+            <div class="progress" style="height: 2px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-{{ message.tags }}" 
+                     role="progressbar" 
+                     style="width: 100%">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<style>
+    .messages-container {
+        min-width: 300px;
+        max-width: 90%;
+        z-index: 1050;
+    }
+
+    .toast {
+        opacity: 1 !important;
+        background-color: #fff;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .toast.show {
+        animation: slideIn 0.3s ease-out, fadeIn 0.3s ease-out;
+    }
+
+    .toast.hide {
+        animation: slideOut 0.3s ease-out, fadeOut 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateY(-100%); }
+        to { transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideOut {
+        from { transform: translateY(0); }
+        to { transform: translateY(-100%); }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+
+    .progress {
+        border-radius: 0 0 0.25rem 0.25rem;
+    }
+
+    .toast .btn-close {
+        font-size: 0.875rem;
+        opacity: 0.5;
+        transition: opacity 0.15s;
+    }
+
+    .toast .btn-close:hover {
+        opacity: 1;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            toast.classList.add('hide');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 5000);
+
+        // Handle manual dismiss
+        const closeBtn = toast.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                toast.classList.add('hide');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            });
+        }
+    });
+});
+</script>
+{% endif %}
