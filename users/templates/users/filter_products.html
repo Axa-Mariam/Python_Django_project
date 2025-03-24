@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sports Equipment Catalog | Filter Results{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-banner {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        padding: 4rem 0;
+        color: white;
+        margin-top: -3rem;
+    }
+    
+    .filter-sidebar {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        padding: 1.5rem;
+        background-color: white;
+    }
+    
+    .filter-header {
+        border-bottom: 1px solid #e9e9e9;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .filter-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .range-slider {
+        margin-top: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .product-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+    }
+    
+    .product-img-container {
+        position: relative;
+        height: 200px;
+    }
+    
+    .product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--accent-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .badge-category {
+        background: var(--primary-color);
+        color: white;
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-weight: normal;
+        font-size: 0.8rem;
+    }
+    
+    .filter-chip {
+        display: inline-block;
+        padding: 5px 15px;
+        background-color: #f8f9fa;
+        border-radius: 20px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .filter-chip .close {
+        margin-left: 8px;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .btn-sports {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+        color: white;
+    }
+    
+    .btn-sports:hover {
+        background-color: #e65100;
+        border-color: #e65100;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Banner -->
+<section class="page-banner">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-3">
+                        <li class="breadcrumb-item"><a href="{% url 'users:home' %}" class="text-white">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'users:product_list' %}" class="text-white">Products</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Filter Results</li>
+                    </ol>
+                </nav>
+                <h1 class="display-5 fw-bold mb-3">Sports Equipment Catalog</h1>
+                <p class="lead">Find the perfect gear to match your sporting needs</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filter Results Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Mobile Filter Toggle -->
+            <div class="col-12 d-md-none mb-3">
+                <button class="btn btn-sports w-100" type="button" data-bs-toggle="collapse" data-bs-target="#mobileFilterMenu">
+                    <i class="fas fa-filter me-2"></i>Filter Products
+                </button>
+            </div>
+            
+            <!-- Filter Sidebar -->
+            <div class="col-md-3 collapse d-md-block" id="mobileFilterMenu">
+                <div class="filter-sidebar mb-4">
+                    <h5 class="filter-header">Refine Results</h5>
+                    <form method="get" action="{% url 'users:filter_products' %}">
+                        <!-- Category Filter -->
+                        <div class="filter-group">
+                            <h6>Categories</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="category" id="all-categories" value="" {% if not selected_category %}checked{% endif %}>
+                                <label class="form-check-label" for="all-categories">
+                                    All Categories
+                                </label>
+                            </div>
+                            {% for category in categories %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="category" id="category-{{ category.id }}" 
+                                           value="{{ category.id }}" {% if selected_category == category.id|stringformat:"i" %}checked{% endif %}>
+                                    <label class="form-check-label" for="category-{{ category.id }}">
+                                        {{ category.name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Brand Filter -->
+                        <div class="filter-group">
+                            <h6>Brands</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="brand" id="all-brands" value="" {% if not selected_brand %}checked{% endif %}>
+                                <label class="form-check-label" for="all-brands">
+                                    All Brands
+                                </label>
+                            </div>
+                            {% for brand_code, brand_name in brands %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="brand" id="brand-{{ brand_code }}" 
+                                           value="{{ brand_code }}" {% if selected_brand == brand_code %}checked{% endif %}>
+                                    <label class="form-check-label" for="brand-{{ brand_code }}">
+                                        {{ brand_name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Size Filter -->
+                        <div class="filter-group">
+                            <h6>Sizes</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="size" id="all-sizes" value="" {% if not selected_size %}checked{% endif %}>
+                                <label class="form-check-label" for="all-sizes">
+                                    All Sizes
+                                </label>
+                            </div>
+                            {% for size_code, size_name in sizes %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="size" id="size-{{ size_code }}" 
+                                           value="{{ size_code }}" {% if selected_size == size_code %}checked{% endif %}>
+                                    <label class="form-check-label" for="size-{{ size_code }}">
+                                        {{ size_name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Price Range Filter -->
+                        <div class="filter-group">
+                            <h6>Price Range</h6>
+                            <div class="d-flex justify-content-between">
+                                <span>$<span id="min-price-display">{{ min_price|default:0 }}</span></span>
+                                <span>$<span id="max-price-display">{{ max_price|default:1000 }}</span></span>
+                            </div>
+                            <div class="range-slider">
+                                <input type="range" class="form-range" min="0" max="1000" step="10" id="min-price" name="min_price" 
+                                       value="{{ min_price|default:0 }}">
+                                <input type="range" class="form-range" min="0" max="1000" step="10" id="max-price" name="max_price" 
+                                       value="{{ max_price|default:1000 }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Sort By -->
+                        <div class="filter-group">
+                            <h6>Sort By</h6>
+                            <select class="form-select" name="sort">
+                                <option value="default" {% if sort_by == 'default' %}selected{% endif %}>Relevance</option>
+                                <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                                <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                                <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-sports">
+                                <i class="fas fa-filter me-2"></i>Apply Filters
+                            </button>
+                            <a href="{% url 'users:filter_products' %}" class="btn btn-outline-secondary">Clear Filters</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Product Listing -->
+            <div class="col-md-9">
+                <!-- Active Filters -->
+                {% if selected_category or selected_brand or selected_size or min_price != '0' or max_price != '1000' %}
+                <div class="mb-4">
+                    <h6 class="mb-2">Active Filters:</h6>
+                    <div>
+                        {% if selected_category %}
+                            <div class="filter-chip">
+                                Category: {{ selected_category }}
+                                <a href="{% url 'users:filter_products' %}?{% if selected_brand %}brand={{ selected_brand }}&{% endif %}{% if selected_size %}size={{ selected_size }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="close"><i class="fas fa-times"></i></a>
+                            </div>
+                        {% endif %}
+                        {% if selected_brand %}
+                            <div class="filter-chip">
+                                Brand: {{ selected_brand|capfirst }}
+                                <a href="{% url 'users:filter_products' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_size %}size={{ selected_size }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="close"><i class="fas fa-times"></i></a>
+                            </div>
+                        {% endif %}
+                        {% if selected_size %}
+                            <div class="filter-chip">
+                                Size: {{ selected_size }}
+                                <a href="{% url 'users:filter_products' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_brand %}brand={{ selected_brand }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="close"><i class="fas fa-times"></i></a>
+                            </div>
+                        {% endif %}
+                        {% if min_price != '0' or max_price != '1000' %}
+                            <div class="filter-chip">
+                                Price: ${{ min_price|default:0 }} - ${{ max_price|default:1000 }}
+                                <a href="{% url 'users:filter_products' %}?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_brand %}brand={{ selected_brand }}&{% endif %}{% if selected_size %}size={{ selected_size }}&{% endif %}{% if sort_by %}sort={{ sort_by }}{% endif %}" class="close"><i class="fas fa-times"></i></a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Products Count and Sort -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <p class="mb-0"><strong>{{ products.count }}</strong> products found</p>
+                </div>
+                
+                <!-- Products Grid -->
+                <div class="row g-4">
+                    {% for product in products %}
+                        <div class="col-sm-6 col-md-4">
+                            <div class="card product-card shadow-sm">
+                                <div class="product-img-container">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/300x300?text=Product" class="product-img" alt="{{ product.name }}">
+                                    {% endif %}
+                                    
+                                    {% if product.discounts.exists %}
+                                        <div class="discount-badge">
+                                            {% with discount=product.discounts.first %}
+                                            -{{ discount.discount_percent|floatformat:0 }}%
+                                            {% endwith %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-1">
+                                        <span class="badge badge-category">{{ product.category.name }}</span>
+                                        {% if product.brand != 'other' %}
+                                            <span class="badge bg-secondary">{{ product.get_brand_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <h6 class="mb-1">{{ product.name }}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            {% if product.get_discount_price < product.price %}
+                                                <span class="text-danger fw-bold">${{ product.get_discount_price|floatformat:2 }}</span>
+                                                <small class="text-muted text-decoration-line-through">${{ product.price }}</small>
+                                            {% else %}
+                                                <span class="fw-bold">${{ product.price }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <a href="{% url 'users:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                            <h4>No products found</h4>
+                            <p class="text-muted">Try adjusting your search or filter criteria</p>
+                            <a href="{% url 'users:filter_products' %}" class="btn btn-sports mt-3">
+                                <i class="fas fa-sync-alt me-2"></i>Reset Filters
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if products.paginator %}
+                    <nav aria-label="Page navigation" class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            {% if products.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                                </li>
+                            {% endif %}
+                            
+                            {% for i in products.paginator.page_range %}
+                                {% if products.number == i %}
+                                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if products.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Price range slider
+    document.addEventListener('DOMContentLoaded', function() {
+        const minPriceInput = document.getElementById('min-price');
+        const maxPriceInput = document.getElementById('max-price');
+        const minPriceDisplay = document.getElementById('min-price-display');
+        const maxPriceDisplay = document.getElementById('max-price-display');
+        
+        if(minPriceInput && maxPriceInput && minPriceDisplay && maxPriceDisplay) {
+            // Initialize displays
+            minPriceDisplay.textContent = minPriceInput.value;
+            maxPriceDisplay.textContent = maxPriceInput.value;
+            
+            // Event listeners for range inputs
+            minPriceInput.addEventListener('input', function() {
+                minPriceDisplay.textContent = this.value;
+                // Ensure min doesn't exceed max
+                if(parseInt(minPriceInput.value) > parseInt(maxPriceInput.value)) {
+                    maxPriceInput.value = minPriceInput.value;
+                    maxPriceDisplay.textContent = minPriceInput.value;
+                }
+            });
+            
+            maxPriceInput.addEventListener('input', function() {
+                maxPriceDisplay.textContent = this.value;
+                // Ensure max doesn't go below min
+                if(parseInt(maxPriceInput.value) < parseInt(minPriceInput.value)) {
+                    minPriceInput.value = maxPriceInput.value;
+                    minPriceDisplay.textContent = maxPriceInput.value;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,27 +1,33 @@
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from django import forms
-from .models import Users, CartItem, Order, PaymentInfo, OrderItem, Product, ProductDiscount, Notification
+from .models import Users, CartItem, Order, PaymentInfo, OrderItem, Notification
 from datetime import date
 import re
-from django.core.files.images import get_image_dimensions
-from django.utils.text import slugify
 from django.utils import timezone
 
 class UserRegistrationForm(UserCreationForm):
     mobile = forms.CharField(
         max_length=15,
         label="Mobile",
-        widget=forms.TextInput(attrs={'placeholder': 'Enter your mobile number'})
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your mobile number', 'class': 'form-control'})
     )
     
     email = forms.EmailField(
         label="Email",
-        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email'})
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email', 'class': 'form-control'})
     )
 
     class Meta:
         model = Users
         fields = ('username', 'email', 'mobile', 'password1', 'password2')
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter your username'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Enter password'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirm password'})
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -69,7 +75,7 @@ class UserProfileUpdateForm(forms.ModelForm):
         required=False
     )
     
-    # Add address fields
+    # Address fields
     address = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'form-control',
@@ -105,12 +111,9 @@ class UserProfileUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Users
-        fields = ['email', 'mobile', 'date_of_birth', 'gender', 'marital_status', 
-                 'blood_group', 'address', 'city', 'country', 'postal_code']
+        fields = ['email', 'mobile', 'date_of_birth', 'gender', 'address', 'city', 'country', 'postal_code']
         widgets = {
-            'gender': forms.Select(attrs={'class': 'form-control'}),
-            'marital_status': forms.Select(attrs={'class': 'form-control'}),
-            'blood_group': forms.Select(attrs={'class': 'form-control'})
+            'gender': forms.Select(attrs={'class': 'form-control'})
         }
 
     def clean_email(self):
@@ -155,7 +158,7 @@ class UserPasswordChangeForm(PasswordChangeForm):
             'placeholder': 'Confirm new password'
         })
 
-# New forms for e-commerce functionality
+# E-commerce forms
 class CartItemForm(forms.ModelForm):
     quantity = forms.IntegerField(
         min_value=1,
@@ -171,7 +174,6 @@ class CartItemForm(forms.ModelForm):
         fields = ['quantity']
     
     def __init__(self, *args, **kwargs):
-        # Store product for validation
         self.product = kwargs.pop('product', None)
         super().__init__(*args, **kwargs)
         
@@ -180,9 +182,7 @@ class CartItemForm(forms.ModelForm):
         if quantity < 1:
             raise forms.ValidationError("Quantity must be at least 1.")
         
-        # Check against product stock
         product = self.product
-        # If product wasn't passed, try to get it from the instance
         if not product and self.instance and self.instance.pk:
             product = self.instance.product
             
@@ -192,7 +192,6 @@ class CartItemForm(forms.ModelForm):
         return quantity
 
 class ShippingAddressForm(forms.Form):
-    # Use same address as profile option
     use_profile_address = forms.BooleanField(
         label="Use my profile address",
         required=False,
@@ -200,7 +199,6 @@ class ShippingAddressForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )
     
-    # Shipping fields
     shipping_address = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'form-control',
@@ -237,6 +235,12 @@ class ShippingAddressForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        # Only default to profile address if user has a complete address
+        if self.user and all([self.user.address, self.user.city, self.user.country, self.user.postal_code]):
+            self.fields['use_profile_address'].initial = True
+        else:
+            self.fields['use_profile_address'].initial = False
     
     def clean(self):
         cleaned_data = super().clean()
@@ -305,7 +309,7 @@ class CreditCardPaymentForm(forms.ModelForm):
     
     class Meta:
         model = PaymentInfo
-        fields = ['card_number', 'cardholder_name', 'card_expiry', 'cvv']
+        fields = ['card_number', 'cardholder_name', 'card_expiry']
     
     def clean_card_number(self):
         card_number = self.cleaned_data.get('card_number')
@@ -388,139 +392,7 @@ class OrderSearchForm(forms.Form):
         
         return cleaned_data
 
-# New form for Product management
-class ProductForm(forms.ModelForm):
-    class Meta:
-        model = Product
-        fields = ['name', 'category', 'brand', 'description', 'features', 
-                 'price', 'image', 'stock', 'is_available']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'category': forms.Select(attrs={'class': 'form-control'}),
-            'brand': forms.Select(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'features': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'price': forms.NumberInput(attrs={'class': 'form-control', 'min': '0.01', 'step': '0.01'}),
-            'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
-            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-    
-    def clean_image(self):
-        image = self.cleaned_data.get('image')
-        if not image:
-            if not self.instance.pk:  # Only require image for new products
-                raise forms.ValidationError("Please upload a product image.")
-            return self.instance.image  # Return existing image if editing
-        
-        # Validate image dimensions
-        width, height = get_image_dimensions(image)
-        if width < 200 or height < 200:
-            raise forms.ValidationError("Image dimensions should be at least 200x200 pixels.")
-            
-        # Validate file size (max 2MB)
-        if image.size > 2 * 1024 * 1024:
-            raise forms.ValidationError("Image file size should be less than 2MB.")
-            
-        return image
-        
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
-        # Generate a slug from the name
-        slug = slugify(name)
-        
-        # Check if slug exists (excluding the current instance if editing)
-        qs = Product.objects.filter(slug=slug)
-        if self.instance and self.instance.pk:
-            qs = qs.exclude(pk=self.instance.pk)
-            
-        if qs.exists():
-            raise forms.ValidationError("A product with a similar name already exists.")
-        
-        return name
-    
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        
-        # Generate slug if not already set
-        if not instance.slug:
-            instance.slug = slugify(instance.name)
-            
-        if commit:
-            instance.save()
-            
-        return instance
-
-# Form for Product Discounts
-class ProductDiscountForm(forms.ModelForm):
-    class Meta:
-        model = ProductDiscount
-        fields = ['product', 'discount_percent', 'valid_from', 'valid_to', 'is_active']
-        widgets = {
-            'product': forms.Select(attrs={'class': 'form-control'}),
-            'discount_percent': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0.01',
-                'max': '99.99',
-                'step': '0.01'
-            }),
-            'valid_from': forms.DateTimeInput(attrs={
-                'class': 'form-control',
-                'type': 'datetime-local'
-            }),
-            'valid_to': forms.DateTimeInput(attrs={
-                'class': 'form-control',
-                'type': 'datetime-local'
-            }),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-    
-    def clean_discount_percent(self):
-        discount = self.cleaned_data.get('discount_percent')
-        if discount <= 0:
-            raise forms.ValidationError("Discount must be greater than 0%.")
-        if discount >= 100:
-            raise forms.ValidationError("Discount cannot be 100% or more.")
-        return discount
-    
-    def clean_valid_from(self):
-        valid_from = self.cleaned_data.get('valid_from')
-        # Don't allow dates in the past when creating new discounts
-        if not self.instance.pk and valid_from and valid_from < timezone.now():
-            raise forms.ValidationError("Start date cannot be in the past.")
-        return valid_from
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        valid_from = cleaned_data.get('valid_from')
-        valid_to = cleaned_data.get('valid_to')
-        product = cleaned_data.get('product')
-        
-        if valid_from and valid_to and valid_from >= valid_to:
-            self.add_error('valid_to', 'End date must be after start date.')
-        
-        # Check for overlapping discounts for the same product
-        if product and valid_from and valid_to:
-            overlapping = ProductDiscount.objects.filter(
-                product=product,
-                valid_from__lt=valid_to,
-                valid_to__gt=valid_from,
-                is_active=True
-            )
-            
-            # Exclude current instance if editing
-            if self.instance.pk:
-                overlapping = overlapping.exclude(pk=self.instance.pk)
-                
-            if overlapping.exists():
-                self.add_error(
-                    None, 
-                    "This discount overlaps with another active discount for the same product. "
-                    "Please adjust the dates."
-                )
-        
-        return cleaned_data
-
-# Form for Notifications
+# Simple notification form for customer service
 class NotificationForm(forms.ModelForm):
     class Meta:
         model = Notification
@@ -531,24 +403,3 @@ class NotificationForm(forms.ModelForm):
             'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'notification_type': forms.Select(attrs={'class': 'form-control'}),
         }
-        
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # If editing existing notification, show read status (read-only)
-        if self.instance and self.instance.pk:
-            self.fields['read'] = forms.BooleanField(
-                required=False, 
-                disabled=True,
-                initial=self.instance.read,
-                help_text="This field is automatically updated when a user reads the notification."
-            )
-            
-            # Show read timestamp if applicable
-            if self.instance.read_at:
-                self.fields['read_at'] = forms.DateTimeField(
-                    disabled=True,
-                    initial=self.instance.read_at,
-                    widget=forms.DateTimeInput(attrs={'class': 'form-control'}),
-                    help_text="When the notification was read by the user."
-                )

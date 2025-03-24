@@ -152,62 +152,45 @@
     <nav class="navbar navbar-expand-lg category-nav d-none d-lg-block">
         <div class="container">
             <ul class="navbar-nav mx-auto">
+                {% for category in categories|slice:":8" %}
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Football</a>
+                    <a class="nav-link" href="{% url 'users:product_list_by_category' category.slug %}">{{ category.name }}</a>
                 </li>
+                {% empty %}
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Basketball</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Tennis</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Running</a>
+                    <a class="nav-link" href="#">Team Sports</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Fitness</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="#">Running</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="#">Swimming</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Cricket</a>
+                    <a class="nav-link" href="#">Outdoor Sports</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Outdoor</a>
+                    <a class="nav-link" href="#">Winter Sports</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Combat Sports</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Racquet Sports</a>
+                </li>
+                {% endfor %}
             </ul>
         </div>
     </nav>
-
-    <!-- Promo Bar -->
-    <div class="bg-warning text-dark py-2 text-center">
-        <div class="container">
-            <small><strong>SPECIAL OFFER:</strong> Free shipping on orders over $50! Use code: SPORTSFREE</small>
-        </div>
-    </div>
 
     <!-- Main Content -->
     <div class="main-content py-5">
         {% block content %}
         {% endblock %}
     </div>
-
-    <!-- Newsletter Signup -->
-    <section class="bg-light py-4 border-top">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8 text-center">
-                    <h4>Join Our Sports Community</h4>
-                    <p>Get the latest news on sports equipment, training tips, and exclusive offers!</p>
-                    <div class="input-group mb-3 w-75 mx-auto">
-                        <input type="email" class="form-control" placeholder="Enter your email address">
-                        <button class="btn btn-sports" type="button">Subscribe</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- Footer -->
     <footer class="footer-sports text-white py-5">
@@ -227,11 +210,15 @@
                 <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
                     <h5 class="mb-3">Shop Categories</h5>
                     <ul class="list-unstyled mb-0">
+                        {% for category in categories|slice:":5" %}
+                        <li class="mb-2"><a href="{% url 'users:product_list_by_category' category.slug %}" class="text-white text-decoration-none">{{ category.name }}</a></li>
+                        {% empty %}
                         <li class="mb-2"><a href="#" class="text-white text-decoration-none">Team Sports</a></li>
                         <li class="mb-2"><a href="#" class="text-white text-decoration-none">Training Gear</a></li>
                         <li class="mb-2"><a href="#" class="text-white text-decoration-none">Athletic Apparel</a></li>
                         <li class="mb-2"><a href="#" class="text-white text-decoration-none">Fitness Equipment</a></li>
                         <li class="mb-2"><a href="#" class="text-white text-decoration-none">Outdoor Recreation</a></li>
+                        {% endfor %}
                     </ul>
                 </div>
 

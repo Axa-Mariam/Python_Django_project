@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Results for "{{ query }}" - SportsPro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: none;
+        height: 100%;
+    }
+    
+    .product-img-container {
+        position: relative;
+        height: 200px;
+    }
+    
+    .product-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--accent-color);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    
+    .search-header {
+        background-color: var(--light-bg);
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+    
+    .filter-sidebar {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Search Header -->
+    <div class="search-header text-center">
+        <h2>Search Results</h2>
+        <p class="text-muted">
+            {% if query %}
+                Found {{ products|length }} results for "{{ query }}"
+            {% else %}
+                Please enter a search term
+            {% endif %}
+        </p>
+        
+        <!-- Search form for refining search -->
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form action="{% url 'users:search' %}" method="GET" class="d-flex">
+                    <input type="text" name="q" class="form-control" value="{{ query }}" placeholder="Search for products...">
+                    <button type="submit" class="btn btn-sports ms-2">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% if products %}
+        <!-- Products Grid -->
+        <div class="row g-4">
+            {% for product in products %}
+                <div class="col-6 col-md-3">
+                    <div class="card product-card shadow-sm">
+                        <div class="product-img-container">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/300x300?text=Product" class="product-img" alt="{{ product.name }}">
+                            {% endif %}
+                            
+                            {% if product.discounts.exists %}
+                                <div class="discount-badge">
+                                    {% with discount=product.discounts.first %}
+                                    -{{ discount.discount_percent|floatformat:0 }}%
+                                    {% endwith %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
+                            <p class="text-muted small">{{ product.category.name }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if product.discounts.exists %}
+                                        <span class="fw-bold text-danger">${{ product.get_discount_price|floatformat:2 }}</span>
+                                        <span class="text-muted text-decoration-line-through">${{ product.price }}</span>
+                                    {% else %}
+                                        <span class="fw-bold">${{ product.price }}</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'users:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- No Results -->
+        <div class="text-center py-5">
+            {% if query %}
+                <div class="mb-4">
+                    <i class="fas fa-search fa-4x text-muted"></i>
+                </div>
+                <h4>No products found matching "{{ query }}"</h4>
+                <p class="text-muted">Try searching with different keywords or browse our categories.</p>
+                <div class="mt-4">
+                    <a href="{% url 'users:product_list' %}" class="btn btn-sports">
+                        <i class="fas fa-th-list me-2"></i>Browse All Products
+                    </a>
+                </div>
+            {% else %}
+                <div class="mb-4">
+                    <i class="fas fa-keyboard fa-4x text-muted"></i>
+                </div>
+                <h4>Enter a search term to find products</h4>
+                <p class="text-muted">You can search by product name, description, or sport category.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

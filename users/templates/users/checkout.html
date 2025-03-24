@@ -1,16 +1,15 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}Checkout{% endblock %}
+{% block title %}Checkout - SportsPro{% endblock %}
 
 {% block extra_css %}
 <style>
     .checkout-header {
-        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        background: linear-gradient(135deg, #1a73e8 0%, #00796b 100%);
         padding: 3rem 0;
         color: white;
-        margin-top: -3rem;
     }
     
     .checkout-container {
@@ -49,8 +48,8 @@
     }
     
     .step-active .step-icon {
-        background: linear-gradient(45deg, #2575fc 0%, #6a11cb 100%);
-        border-color: #6a11cb;
+        background: var(--primary-color);
+        border-color: var(--primary-color);
         color: white;
     }
     
@@ -93,7 +92,7 @@
     }
     
     .payment-option:hover {
-        border-color: #6a11cb;
+        border-color: var(--primary-color);
     }
     
     .payment-option input[type="radio"] {
@@ -101,8 +100,8 @@
     }
     
     .payment-option.selected {
-        border-color: #6a11cb;
-        background-color: rgba(106, 17, 203, 0.05);
+        border-color: var(--primary-color);
+        background-color: rgba(26, 115, 232, 0.05);
     }
     
     .payment-option-details {
@@ -114,17 +113,6 @@
     
     .payment-option.selected .payment-option-details {
         display: block;
-    }
-    
-    .btn-primary {
-        background: linear-gradient(45deg, #2575fc 0%, #6a11cb 100%);
-        border: none;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(37, 117, 252, 0.4);
     }
     
     .product-thumbnail {
@@ -156,42 +144,10 @@
     .checkout-tab.active {
         display: block;
     }
-    
-    .nav-pills .nav-link.active {
-        background: linear-gradient(45deg, #2575fc 0%, #6a11cb 100%);
-    }
-    
-    .address-card {
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        cursor: pointer;
-    }
-    
-    .address-card.selected {
-        border-color: #6a11cb;
-        background-color: rgba(106, 17, 203, 0.05);
-    }
-    
-    .address-actions {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 0.5rem;
-    }
-    
-    .address-actions a {
-        margin-left: 0.5rem;
-        color: #6c757d;
-    }
-    
-    .address-actions a:hover {
-        color: #6a11cb;
-    }
 </style>
 {% endblock %}
 
-{% block content %}
+{% block dashboard_content %}
 <!-- Checkout Header -->
 <section class="checkout-header">
     <div class="container">
@@ -234,158 +190,96 @@
                 <div class="checkout-container checkout-tab active" id="tab-shipping">
                     <h3 class="section-title">Shipping Address</h3>
                     
-                    <!-- Saved Addresses -->
-                    {% if saved_addresses %}
-                        <div class="mb-4">
-                            <h5 class="mb-3">Select a saved address</h5>
-                            {% for address in saved_addresses %}
-                                <div class="address-card address-select" data-address-id="{{ address.id }}">
-                                    <div class="d-flex align-items-center">
-                                        <input type="radio" name="saved_address" id="address-{{ address.id }}" value="{{ address.id }}" 
-                                               class="me-2" {% if forloop.first %}checked{% endif %}>
-                                        <div>
-                                            <strong>{{ address.full_name }}</strong>
-                                            <p class="mb-0">{{ address.street_address }}, {{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
-                                            <p class="mb-0">{{ address.country }}</p>
-                                            <p class="mb-0">Phone: {{ address.phone }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="address-actions">
-                                        <a href="#" class="edit-address" data-address-id="{{ address.id }}">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
-                                        <a href="#" class="delete-address" data-address-id="{{ address.id }}">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </a>
-                                    </div>
+                    <form id="shipping-form" method="post" action="{% url 'users:checkout' %}">
+                        {% csrf_token %}
+                        {{ shipping_form|crispy }}
+                        
+                        <div id="new-address-form" style="display: none;">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="shipping_address" class="form-label">Address</label>
+                                    <textarea class="form-control" id="shipping_address" name="shipping_address" rows="3"></textarea>
                                 </div>
-                            {% endfor %}
-                            
-                            <button class="btn btn-outline-secondary mt-2" id="add-new-address">
-                                <i class="fas fa-plus me-2"></i>Add New Address
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="shipping_city" class="form-label">City</label>
+                                    <input type="text" class="form-control" id="shipping_city" name="shipping_city">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="shipping_postal_code" class="form-label">Postal Code</label>
+                                    <input type="text" class="form-control" id="shipping_postal_code" name="shipping_postal_code">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="shipping_country" class="form-label">Country</label>
+                                    <input type="text" class="form-control" id="shipping_country" name="shipping_country">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" id="continue-payment">
+                                Continue to Payment <i class="fas fa-arrow-right ms-2"></i>
                             </button>
                         </div>
-                    {% endif %}
-                    
-                    <!-- New Address Form -->
-                    <div id="address-form" {% if saved_addresses %}style="display: none;"{% endif %}>
-                        <h5 class="mb-3">{% if saved_addresses %}New Address{% else %}Enter your shipping details{% endif %}</h5>
-                        <form method="post" action="{% url 'users:save_shipping_address' %}" id="shipping-form">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ shipping_form.full_name|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ shipping_form.phone|as_crispy_field }}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12">
-                                    {{ shipping_form.street_address|as_crispy_field }}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ shipping_form.city|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ shipping_form.state|as_crispy_field }}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ shipping_form.postal_code|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ shipping_form.country|as_crispy_field }}
-                                </div>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" id="save-address" name="save_address" checked>
-                                <label class="form-check-label" for="save-address">
-                                    Save this address for future orders
-                                </label>
-                            </div>
-                            {% if saved_addresses %}
-                                <div class="d-flex mt-3">
-                                    <button type="button" class="btn btn-outline-secondary me-2" id="cancel-new-address">Cancel</button>
-                                    <button type="button" class="btn btn-primary" id="continue-payment">Save & Continue</button>
-                                </div>
-                            {% else %}
-                                <div class="d-grid mt-3">
-                                    <button type="button" class="btn btn-primary btn-lg" id="continue-payment">Continue to Payment</button>
-                                </div>
-                            {% endif %}
-                        </form>
-                    </div>
+                    </form>
                 </div>
                 
                 <!-- Payment Method -->
                 <div class="checkout-container checkout-tab" id="tab-payment">
                     <h3 class="section-title">Payment Method</h3>
                     
-                    <form method="post" action="{% url 'users:process_payment' %}" id="payment-form">
-                        {% csrf_token %}
-                        <div class="payment-options">
-                            <!-- Credit Card -->
-                            <label class="payment-option selected">
-                                <input type="radio" name="payment_method" value="credit_card" checked>
-                                <i class="far fa-credit-card me-2"></i> Credit Card
-                                
-                                <div class="payment-option-details">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            {{ payment_form.card_number|as_crispy_field }}
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            {{ payment_form.card_holder|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-3">
-                                            {{ payment_form.expiration_date|as_crispy_field }}
-                                        </div>
-                                        <div class="col-md-3">
-                                            {{ payment_form.cvv|as_crispy_field }}
-                                        </div>
-                                    </div>
+                    <div class="payment-options">
+                        {{ payment_form|crispy }}
+                        
+                        <!-- Credit Card Details -->
+                        <div id="card-payment-details" class="payment-option-details">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="card_number" class="form-label">Card Number</label>
+                                    <input type="text" class="form-control" id="card_number" name="card_number" placeholder="1234 5678 9012 3456">
                                 </div>
-                            </label>
-                            
-                            <!-- PayPal -->
-                            <label class="payment-option">
-                                <input type="radio" name="payment_method" value="paypal">
-                                <i class="fab fa-paypal me-2"></i> PayPal
-                                
-                                <div class="payment-option-details">
-                                    <p class="text-muted">You will be redirected to PayPal to complete your purchase securely.</p>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="card_holder" class="form-label">Cardholder Name</label>
+                                    <input type="text" class="form-control" id="card_holder" name="card_holder" placeholder="John Doe">
                                 </div>
-                            </label>
-                            
-                            <!-- Cash on Delivery -->
-                            <label class="payment-option">
-                                <input type="radio" name="payment_method" value="cod">
-                                <i class="fas fa-money-bill-wave me-2"></i> Cash on Delivery
-                                
-                                <div class="payment-option-details">
-                                    <p class="text-muted">Pay with cash when your order is delivered.</p>
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i> Additional fee of $5 applies for Cash on Delivery.
-                                    </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="card_expiry" class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" id="card_expiry" name="card_expiry" placeholder="MM/YY">
                                 </div>
-                            </label>
+                                <div class="col-md-3 mb-3">
+                                    <label for="cvv" class="form-label">CVV</label>
+                                    <input type="text" class="form-control" id="cvv" name="cvv" placeholder="123">
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-outline-secondary" id="back-to-shipping">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Shipping
-                            </button>
-                            <button type="button" class="btn btn-primary" id="place-order">
-                                <i class="fas fa-check-circle me-2"></i>Place Order
-                            </button>
+                        <!-- PayPal Info -->
+                        <div id="paypal-payment-details" class="payment-option-details">
+                            <p class="text-muted">You will be redirected to PayPal to complete your purchase securely.</p>
                         </div>
-                    </form>
+                        
+                        <!-- Cash on Delivery Info -->
+                        <div id="cod-payment-details" class="payment-option-details">
+                            <p class="text-muted">Pay with cash when your order is delivered.</p>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Additional fee of $5 applies for Cash on Delivery.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary" id="back-to-shipping">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Shipping
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="place-order" form="shipping-form">
+                            <i class="fas fa-check-circle me-2"></i> Place Order
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -398,18 +292,14 @@
                     <div class="order-items mb-4">
                         {% for item in cart_items %}
                             <div class="checkout-product">
-                                <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}https://via.placeholder.com/50x50{% endif %}" 
+                                <img src="{% if item.product.image %}{{ item.product.image.url }}{% else %}https://via.placeholder.com/50x50?text=Product{% endif %}" 
                                      class="product-thumbnail" alt="{{ item.product.name }}">
                                 <div class="checkout-product-info">
                                     <p class="mb-0">{{ item.product.name }}</p>
                                     <small class="text-muted">Qty: {{ item.quantity }}</small>
                                 </div>
                                 <div class="checkout-product-price">
-                                    {% if item.product.discount_price %}
-                                        <span>${{ item.get_total_discount_price }}</span>
-                                    {% else %}
-                                        <span>${{ item.get_total_price }}</span>
-                                    {% endif %}
+                                    <span>${{ item.get_total }}</span>
                                 </div>
                             </div>
                         {% endfor %}
@@ -420,46 +310,20 @@
                         <span>Subtotal</span>
                         <span>${{ cart_total }}</span>
                     </div>
-                    {% if discount_amount %}
-                        <div class="order-summary-item text-success">
-                            <span>Discount</span>
-                            <span>-${{ discount_amount }}</span>
-                        </div>
-                    {% endif %}
                     <div class="order-summary-item">
                         <span>Shipping</span>
-                        <span>${{ shipping_cost|default:"0.00" }}</span>
+                        <span id="shipping">${{ shipping_cost|default:"5.00" }}</span>
                     </div>
                     <div class="order-summary-item">
-                        <span>Tax</span>
-                        <span>${{ tax_amount|default:"0.00" }}</span>
+                        <span>Tax (8%)</span>
+                        <span id="tax">${{ tax_amount|floatformat:2 }}</span>
                     </div>
                     
                     <!-- Total -->
                     <div class="order-summary-item order-total">
                         <span>Total</span>
-                        <span>${{ grand_total }}</span>
+                        <span id="total">${{ grand_total|floatformat:2 }}</span>
                     </div>
-                    
-                    <!-- Coupon Code -->
-                    {% if not applied_coupon %}
-                        <div class="mt-3">
-                            <form method="post" action="{% url 'users:apply_coupon' %}" class="input-group">
-                                {% csrf_token %}
-                                <input type="hidden" name="checkout" value="1">
-                                <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code">
-                                <button type="submit" class="btn btn-outline-secondary">Apply</button>
-                            </form>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-success mt-3">
-                            <i class="fas fa-check-circle me-2"></i> Coupon "{{ applied_coupon.code }}" applied!
-                            <form method="post" action="{% url 'users:remove_coupon' %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-link p-0 ms-2">Remove</button>
-                            </form>
-                        </div>
-                    {% endif %}
                     
                     <!-- Secure Payment Note -->
                     <div class="mt-3 text-center">
@@ -494,9 +358,43 @@
         const stepPayment = document.getElementById('step-payment');
         const stepConfirmation = document.getElementById('step-confirmation');
         
+        // Address toggle
+        const useProfileAddressCheckbox = document.getElementById('id_use_profile_address');
+        const newAddressFormDiv = document.getElementById('new-address-form');
+        
+        // Toggle address form based on checkbox
+        if (useProfileAddressCheckbox) {
+            useProfileAddressCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    newAddressFormDiv.style.display = 'none';
+                } else {
+                    newAddressFormDiv.style.display = 'block';
+                }
+            });
+            
+            // Initialize the form state
+            if (useProfileAddressCheckbox.checked) {
+                newAddressFormDiv.style.display = 'none';
+            } else {
+                newAddressFormDiv.style.display = 'block';
+            }
+        }
+        
         if (continuePaymentBtn) {
             continuePaymentBtn.addEventListener('click', function() {
-                // Validate shipping form here
+                // Validate shipping information first
+                if (!useProfileAddressCheckbox.checked) {
+                    const shippingAddress = document.getElementById('shipping_address').value;
+                    const shippingCity = document.getElementById('shipping_city').value;
+                    const shippingPostalCode = document.getElementById('shipping_postal_code').value;
+                    const shippingCountry = document.getElementById('shipping_country').value;
+                    
+                    if (!shippingAddress || !shippingCity || !shippingPostalCode || !shippingCountry) {
+                        alert('Please complete all shipping address fields');
+                        return;
+                    }
+                }
+                
                 tabShipping.classList.remove('active');
                 tabPayment.classList.add('active');
                 stepPayment.classList.add('step-active');
@@ -511,56 +409,63 @@
             });
         }
         
-        if (placeOrderBtn) {
-            placeOrderBtn.addEventListener('click', function() {
-                // Validate payment form here
-                document.getElementById('payment-form').submit();
-            });
-        }
-        
         // Payment option selection
-        const paymentOptions = document.querySelectorAll('.payment-option');
-        paymentOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                // Unselect all options
-                paymentOptions.forEach(opt => opt.classList.remove('selected'));
-                // Select clicked option
-                option.classList.add('selected');
-                // Check the radio button
-                option.querySelector('input[type="radio"]').checked = true;
-            });
-        });
+        const paymentOptions = document.querySelectorAll('input[name="payment_method"]');
+        const cardPaymentDetails = document.getElementById('card-payment-details');
+        const paypalPaymentDetails = document.getElementById('paypal-payment-details');
+        const codPaymentDetails = document.getElementById('cod-payment-details');
         
-        // Address selection and management
-        const addressCards = document.querySelectorAll('.address-select');
-        addressCards.forEach(card => {
-            card.addEventListener('click', function() {
-                addressCards.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                const radioInput = card.querySelector('input[type="radio"]');
-                if (radioInput) {
-                    radioInput.checked = true;
-                }
-            });
-        });
-        
-        // Add new address button
-        const addNewAddressBtn = document.getElementById('add-new-address');
-        const addressForm = document.getElementById('address-form');
-        const cancelNewAddressBtn = document.getElementById('cancel-new-address');
-        
-        if (addNewAddressBtn) {
-            addNewAddressBtn.addEventListener('click', function() {
-                addressForm.style.display = 'block';
-                addNewAddressBtn.style.display = 'none';
-            });
+        function updatePaymentDetails() {
+            // Hide all payment details initially
+            cardPaymentDetails.style.display = 'none';
+            paypalPaymentDetails.style.display = 'none';
+            codPaymentDetails.style.display = 'none';
+            
+            // Show the relevant payment details based on selected method
+            const selectedPayment = document.querySelector('input[name="payment_method"]:checked').value;
+            if (selectedPayment === 'card') {
+                cardPaymentDetails.style.display = 'block';
+            } else if (selectedPayment === 'paypal') {
+                paypalPaymentDetails.style.display = 'block';
+            } else if (selectedPayment === 'cod') {
+                codPaymentDetails.style.display = 'block';
+                // Update shipping cost for COD
+                document.getElementById('shipping').textContent = '$10.00'; // $5 base + $5 COD fee
+                updateTotal();
+            } else {
+                document.getElementById('shipping').textContent = '$5.00';
+                updateTotal();
+            }
         }
         
-        if (cancelNewAddressBtn) {
-            cancelNewAddressBtn.addEventListener('click', function() {
-                addressForm.style.display = 'none';
-                addNewAddressBtn.style.display = 'block';
+        paymentOptions.forEach(option => {
+            option.addEventListener('change', updatePaymentDetails);
+            
+            // Apply selected class to parent label
+            option.addEventListener('change', function() {
+                const labels = document.querySelectorAll('.payment-option');
+                labels.forEach(label => label.classList.remove('selected'));
+                this.closest('.payment-option')?.classList.add('selected');
             });
+        });
+        
+        // Initialize payment details display
+        updatePaymentDetails();
+        
+        // Function to update the total based on payment method
+        function updateTotal() {
+            const subtotalText = document.querySelector('.order-summary-item:first-child span:last-child').textContent;
+            const subtotal = parseFloat(subtotalText.replace('$', ''));
+            
+            const taxText = document.getElementById('tax').textContent;
+            const taxAmount = parseFloat(taxText.replace('$', ''));
+            
+            const shippingText = document.getElementById('shipping').textContent;
+            const shippingAmount = parseFloat(shippingText.replace('$', ''));
+            
+            // Calculate new total
+            const total = (subtotal + taxAmount + shippingAmount).toFixed(2);
+            document.getElementById('total').textContent = '$' + total;
         }
     });
 </script>

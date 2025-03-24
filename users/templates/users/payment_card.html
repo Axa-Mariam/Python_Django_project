@@ -1,0 +1,344 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Credit Card Payment - SportsPro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 650px;
+        margin: 0 auto;
+    }
+    
+    .card-payment-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .order-summary {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .payment-header {
+        border-bottom: 2px solid var(--secondary-color);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+    
+    .secure-badge {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 8px 12px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .card-input {
+        padding: 12px;
+        border: 1px solid #ced4da;
+    }
+    
+    .card-field-icon {
+        color: #6c757d;
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-right: 0;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    
+    .card-footer {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .payment-logo {
+        height: 30px;
+        margin-right: 10px;
+        opacity: 0.7;
+    }
+    
+    .payment-progress {
+        max-width: 650px;
+        margin: 0 auto 2rem;
+    }
+    
+    .progress-step {
+        position: relative;
+        flex: 1;
+        text-align: center;
+    }
+    
+    .progress-step::before {
+        content: '';
+        height: 2px;
+        background-color: #ccc;
+        position: absolute;
+        top: 15px;
+        left: 0;
+        right: 0;
+        z-index: 1;
+    }
+    
+    .progress-step:first-child::before {
+        left: 50%;
+    }
+    
+    .progress-step:last-child::before {
+        right: 50%;
+    }
+    
+    .progress-step.active::before {
+        background-color: var(--primary-color);
+    }
+    
+    .progress-step.completed::before {
+        background-color: var(--primary-color);
+    }
+    
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #ccc;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin: 0 auto 8px;
+        z-index: 2;
+    }
+    
+    .progress-step.active .step-icon {
+        background-color: var(--primary-color);
+    }
+    
+    .progress-step.completed .step-icon {
+        background-color: var(--primary-color);
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container py-4">
+    <!-- Payment Progress -->
+    <div class="payment-progress mb-4">
+        <div class="d-flex justify-content-between">
+            <div class="progress-step completed">
+                <div class="step-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="step-title small">Cart</div>
+            </div>
+            <div class="progress-step completed">
+                <div class="step-icon">
+                    <i class="fas fa-address-card"></i>
+                </div>
+                <div class="step-title small">Details</div>
+            </div>
+            <div class="progress-step active">
+                <div class="step-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="step-title small">Payment</div>
+            </div>
+            <div class="progress-step">
+                <div class="step-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="step-title small">Complete</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="payment-container">
+        <!-- Order Summary -->
+        <div class="order-summary mb-4">
+            <h4 class="mb-3">Order Summary</h4>
+            <div class="d-flex justify-content-between">
+                <span>Order #{{ order.id }}</span>
+                <span>{{ order.created_at|date:"M d, Y" }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <span class="fw-bold">Total Amount:</span>
+                <span class="fw-bold">${{ order.total_amount }}</span>
+            </div>
+        </div>
+        
+        <!-- Credit Card Payment Form -->
+        <div class="card-payment-form">
+            <div class="payment-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Credit Card Payment</h3>
+                <div class="secure-badge">
+                    <i class="fas fa-lock me-2"></i> Secure Payment
+                </div>
+            </div>
+            
+            <form method="POST" id="payment-form">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_card_number" class="form-label">Card Number</label>
+                    <div class="input-group">
+                        <span class="input-group-text card-field-icon">
+                            <i class="far fa-credit-card"></i>
+                        </span>
+                        {{ form.card_number }}
+                    </div>
+                    {% if form.card_number.errors %}
+                        <div class="text-danger small">
+                            {% for error in form.card_number.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="id_card_holder_name" class="form-label">Cardholder Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text card-field-icon">
+                                <i class="far fa-user"></i>
+                            </span>
+                            {{ form.card_holder_name }}
+                        </div>
+                        {% if form.card_holder_name.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.card_holder_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="id_expiration_date" class="form-label">Expiration Date</label>
+                        <div class="input-group">
+                            <span class="input-group-text card-field-icon">
+                                <i class="far fa-calendar"></i>
+                            </span>
+                            {{ form.expiration_date }}
+                        </div>
+                        {% if form.expiration_date.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.expiration_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="id_cvv" class="form-label">CVV</label>
+                        <div class="input-group">
+                            <span class="input-group-text card-field-icon">
+                                <i class="fas fa-key"></i>
+                            </span>
+                            {{ form.cvv }}
+                        </div>
+                        {% if form.cvv.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.cvv.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">3 or 4 digits on the back of your card</div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div>
+                        <img src="https://cdn.jsdelivr.net/npm/payment-icons@1.3.0/min/flat/visa.svg" class="payment-logo" alt="Visa">
+                        <img src="https://cdn.jsdelivr.net/npm/payment-icons@1.3.0/min/flat/mastercard.svg" class="payment-logo" alt="Mastercard">
+                        <img src="https://cdn.jsdelivr.net/npm/payment-icons@1.3.0/min/flat/amex.svg" class="payment-logo" alt="Amex">
+                        <img src="https://cdn.jsdelivr.net/npm/payment-icons@1.3.0/min/flat/discover.svg" class="payment-logo" alt="Discover">
+                    </div>
+                    
+                    <div>
+                        <a href="{% url 'users:checkout' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-sports">
+                            <i class="fas fa-credit-card me-1"></i> Pay ${{ order.total_amount }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="text-center mt-4 text-muted">
+            <small>
+                <i class="fas fa-shield-alt me-1"></i> Your payment information is secure and encrypted
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simple form validation
+    document.getElementById('payment-form').addEventListener('submit', function(event) {
+        const cardNumber = document.getElementById('id_card_number').value;
+        const cardholderName = document.getElementById('id_card_holder_name').value;
+        const expDate = document.getElementById('id_expiration_date').value;
+        const cvv = document.getElementById('id_cvv').value;
+        
+        let valid = true;
+        
+        // Reset error messages
+        document.querySelectorAll('.text-danger').forEach(el => {
+            if (!el.classList.contains('validation-error')) {
+                el.remove();
+            }
+        });
+        
+        if (!cardNumber || cardNumber.length < 15) {
+            valid = false;
+            addError('id_card_number', 'Please enter a valid card number');
+        }
+        
+        if (!cardholderName) {
+            valid = false;
+            addError('id_card_holder_name', 'Please enter cardholder name');
+        }
+        
+        if (!expDate || !expDate.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) {
+            valid = false;
+            addError('id_expiration_date', 'Please enter a valid expiration date (MM/YY)');
+        }
+        
+        if (!cvv || !cvv.match(/^\d{3,4}$/)) {
+            valid = false;
+            addError('id_cvv', 'Please enter a valid CVV code');
+        }
+        
+        if (!valid) {
+            event.preventDefault();
+        }
+    });
+    
+    function addError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'text-danger small validation-error';
+        errorDiv.textContent = message;
+        field.parentNode.parentNode.appendChild(errorDiv);
+    }
+</script>
+{% endblock %}

@@ -1,136 +1,82 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_base.html' %}
 {% load static %}
 
 {% block title %}User Dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
     .stats-card {
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        transition: transform 0.3s;
     }
-    .stats-card:hover {
-        transform: translateY(-5px);
-    }
-    .feature-icon {
-        width: 4rem;
-        height: 4rem;
-        border-radius: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-    }
-    .card-hover:hover {
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        transform: translateY(-5px);
-    }
-    .dashboard-icon {
-        font-size: 2.5rem;
+    .dashboard-welcome {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
     }
 </style>
 {% endblock %}
 
-{% block content %}
+{% block dashboard_content %}
 <div class="container">
     <!-- Welcome Section -->
     <div class="row mb-4">
         <div class="col-lg-12">
-            <div class="card border-0 bg-light shadow-sm">
+            <div class="card border-0 dashboard-welcome shadow-sm">
                 <div class="card-body p-4">
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                                 {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         {% endfor %}
                     {% endif %}
                     
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="feature-icon bg-primary bg-gradient text-white">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h2 class="mb-1">Welcome back, {{ user.username }}!</h2>
-                            <p class="text-muted mb-0">Here's what's happening with your account today.</p>
-                        </div>
-                    </div>
+                    <h2 class="mb-1">Welcome back, {{ user.username }}!</h2>
+                    <p class="mb-0">Here's what's happening with your account today.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Stats Cards Row -->
+    <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+        <div class="col-sm-6 col-lg-3 mb-3">
             <div class="card stats-card border-0 bg-success bg-gradient text-white">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Cart Items</h6>
-                            <h3 class="mb-0">{{ cart_count|default:"0" }}</h3>
-                        </div>
-                        <div class="dashboard-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                    </div>
-                    <a href="{% url 'users:cart' %}" class="btn btn-sm btn-light mt-3">View Cart</a>
+                <div class="card-body p-3">
+                    <h6 class="text-white-50">Cart Items</h6>
+                    <h3>{{ cart_count|default:"0" }}</h3>
+                    <a href="{% url 'users:cart' %}" class="btn btn-sm btn-light mt-2">View Cart</a>
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+        <div class="col-sm-6 col-lg-3 mb-3">
             <div class="card stats-card border-0 bg-info bg-gradient text-white">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Orders</h6>
-                            <h3 class="mb-0">{{ recent_orders|length|default:"0" }}</h3>
-                        </div>
-                        <div class="dashboard-icon">
-                            <i class="fas fa-box-open"></i>
-                        </div>
-                    </div>
-                    <a href="{% url 'users:order_history' %}" class="btn btn-sm btn-light mt-3">View Orders</a>
+                <div class="card-body p-3">
+                    <h6 class="text-white-50">Orders</h6>
+                    <h3>{{ recent_orders|length|default:"0" }}</h3>
+                    <a href="{% url 'users:order_history' %}" class="btn btn-sm btn-light mt-2">View Orders</a>
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+        <div class="col-sm-6 col-lg-3 mb-3">
             <div class="card stats-card border-0 bg-warning bg-gradient text-white">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Wishlist</h6>
-                            <h3 class="mb-0">{{ user.wishlisted_items.count|default:"0" }}</h3>
-                        </div>
-                        <div class="dashboard-icon">
-                            <i class="fas fa-heart"></i>
-                        </div>
-                    </div>
-                    <a href="{% url 'users:wishlist' %}" class="btn btn-sm btn-light mt-3">View Wishlist</a>
+                <div class="card-body p-3">
+                    <h6 class="text-white-50">Wishlist</h6>
+                    <h3>{{ user.wishlisted_items.count|default:"0" }}</h3>
+                    <a href="{% url 'users:wishlist' %}" class="btn btn-sm btn-light mt-2">View Wishlist</a>
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-6 col-lg-3 mb-4 mb-lg-0">
+        <div class="col-sm-6 col-lg-3 mb-3">
             <div class="card stats-card border-0 bg-danger bg-gradient text-white">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Notifications</h6>
-                            <h3 class="mb-0">{{ user.notifications.filter.count|default:"0" }}</h3>
-                        </div>
-                        <div class="dashboard-icon">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                    </div>
-                    <a href="{% url 'users:notifications' %}" class="btn btn-sm btn-light mt-3">View Notifications</a>
+                <div class="card-body p-3">
+                    <h6 class="text-white-50">Notifications</h6>
+                    <h3>{{ user.notifications.filter.count|default:"0" }}</h3>
+                    <a href="{% url 'users:notifications' %}" class="btn btn-sm btn-light mt-2">View</a>
                 </div>
             </div>
         </div>
@@ -138,7 +84,7 @@
 
     <!-- Profile Information -->
     <div class="row mb-4">
-        <div class="col-md-6 mb-4 mb-md-0">
+        <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white">
                     <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profile Information</h5>
@@ -159,14 +105,12 @@
                     {% if user.date_of_birth %}
                     <div class="mb-3">
                         <label class="form-label text-muted">Date of Birth</label>
-                        <div class="fw-bold">{{ user.date_of_birth }} ({{ age }} years old)</div>
+                        <div class="fw-bold">{{ user.date_of_birth }} {% if age %}({{ age }} years old){% endif %}</div>
                     </div>
                     {% endif %}
-                    <div>
-                        <a href="{% url 'users:profileUpdate' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-user-edit me-2"></i>Edit Profile
-                        </a>
-                    </div>
+                    <a href="{% url 'users:profileUpdate' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                    </a>
                 </div>
             </div>
         </div>
@@ -195,25 +139,20 @@
                         </div>
                     {% else %}
                         <div class="text-center py-4">
-                            <div class="mb-3">
-                                <i class="fas fa-home fa-4x text-muted"></i>
-                            </div>
-                            <h5>No address information provided</h5>
-                            <p class="text-muted">Add your address details to make checkout easier.</p>
+                            <i class="fas fa-home fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No address information provided.</p>
                         </div>
                     {% endif %}
-                    <div>
-                        <a href="{% url 'users:profileUpdate' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-edit me-2"></i>Update Address
-                        </a>
-                    </div>
+                    <a href="{% url 'users:profileUpdate' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Update Address
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Recent Orders -->
-    <div class="row mb-4">
+    <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -255,74 +194,12 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="text-center py-5">
-                            <div class="mb-3">
-                                <i class="fas fa-shopping-bag fa-4x text-muted"></i>
-                            </div>
-                            <h5>No orders yet</h5>
-                            <p class="text-muted">Start shopping to see your orders here.</p>
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No orders yet. Start shopping to see your orders here.</p>
                             <a href="{% url 'users:product_list' %}" class="btn btn-primary mt-2">Browse Products</a>
                         </div>
                     {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Links -->
-    <div class="row">
-        <div class="col-12">
-            <h5 class="mb-3">Quick Links</h5>
-        </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm card-hover h-100">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-shopping-cart fa-3x text-primary"></i>
-                    </div>
-                    <h5>Shop Now</h5>
-                    <p class="text-muted">Browse our latest products and offers</p>
-                    <a href="{% url 'users:product_list' %}" class="btn btn-sm btn-primary">Go Shopping</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm card-hover h-100">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-heart fa-3x text-danger"></i>
-                    </div>
-                    <h5>Wishlist</h5>
-                    <p class="text-muted">Products you've saved for later</p>
-                    <a href="{% url 'users:wishlist' %}" class="btn btn-sm btn-danger">View Wishlist</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm card-hover h-100">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-lock fa-3x text-success"></i>
-                    </div>
-                    <h5>Security</h5>
-                    <p class="text-muted">Update your password and security settings</p>
-                    <a href="{% url 'users:passwordUpdate' %}" class="btn btn-sm btn-success">Update Password</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm card-hover h-100">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3">
-                        <i class="fas fa-bell fa-3x text-warning"></i>
-                    </div>
-                    <h5>Notifications</h5>
-                    <p class="text-muted">Check your latest notifications</p>
-                    <a href="{% url 'users:notifications' %}" class="btn btn-sm btn-warning">View Notifications</a>
                 </div>
             </div>
         </div>

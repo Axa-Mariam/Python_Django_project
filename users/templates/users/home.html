@@ -92,6 +92,17 @@
         margin-bottom: 1rem;
         margin-inline: auto;
     }
+    
+    .sport-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .hover-opacity-100:hover {
+        opacity: 1 !important;
+        transition: opacity 0.3s ease;
+    }
 </style>
 {% endblock %}
 
@@ -123,15 +134,28 @@
 <section class="py-4 bg-light">
     <div class="container">
         <div class="row g-4 justify-content-center">
-            {% for sport in "Football,Basketball,Running,Tennis,Fitness,Swimming"|split:"," %}
+            {% for category in categories|slice:":6" %}
+            <div class="col text-center">
+                <a href="{% url 'users:product_list_by_category' category.slug %}" class="text-decoration-none">
+                    <div class="p-3">
+                        <div class="sport-icon">
+                            <i class="fas fa-{% if category.name == 'Team Sports' %}futbol{% elif category.name == 'Fitness' %}dumbbell{% elif category.name == 'Running' %}running{% elif category.name == 'Swimming' %}swimmer{% elif category.name == 'Outdoor Sports' %}hiking{% elif category.name == 'Winter Sports' %}snowflake{% elif category.name == 'Combat Sports' %}fist-raised{% elif category.name == 'Racquet Sports' %}table-tennis{% else %}medal{% endif %}"></i>
+                        </div>
+                        <h6 class="mb-0">{{ category.name }}</h6>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            {% for sport in "Team Sports,Fitness,Running,Swimming,Racquet Sports,Outdoor" %}
             <div class="col text-center">
                 <div class="p-3">
                     <div class="sport-icon">
-                        <i class="fas fa-{% if sport == 'Football' %}futbol{% elif sport == 'Basketball' %}basketball-ball{% elif sport == 'Running' %}running{% elif sport == 'Tennis' %}table-tennis{% elif sport == 'Fitness' %}dumbbell{% elif sport == 'Swimming' %}swimmer{% endif %}"></i>
+                        <i class="fas fa-{% if sport == 'Team Sports' %}futbol{% elif sport == 'Fitness' %}dumbbell{% elif sport == 'Running' %}running{% elif sport == 'Swimming' %}swimmer{% elif sport == 'Racquet Sports' %}table-tennis{% elif sport == 'Outdoor' %}hiking{% endif %}"></i>
                     </div>
                     <h6 class="mb-0">{{ sport }}</h6>
                 </div>
             </div>
+            {% endfor %}
             {% endfor %}
         </div>
     </div>
@@ -209,14 +233,23 @@
                             {% endif %}
                             
                             {% if product.discounts.exists %}
-                                <div class="discount-badge">-{{ product.discounts.first.discount_percent }}%</div>
+                                <div class="discount-badge">
+                                    {% with discount=product.discounts.first %}
+                                    -{{ discount.discount_percent|floatformat:0 }}%
+                                    {% endwith %}
+                                </div>
                             {% endif %}
                         </div>
                         <div class="card-body">
                             <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="fw-bold">${{ product.price }}</span>
+                                    {% if product.discounts.exists %}
+                                        <span class="fw-bold text-danger">${{ product.get_discount_price|floatformat:2 }}</span>
+                                        <span class="text-muted text-decoration-line-through">${{ product.price }}</span>
+                                    {% else %}
+                                        <span class="fw-bold">${{ product.price }}</span>
+                                    {% endif %}
                                 </div>
                                 <a href="{% url 'users:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-eye"></i> View
@@ -297,7 +330,12 @@
                             <h6 class="card-title">{{ product.name|truncatechars:30 }}</h6>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="fw-bold">${{ product.price }}</span>
+                                    {% if product.discounts.exists %}
+                                        <span class="fw-bold text-danger">${{ product.get_discount_price|floatformat:2 }}</span>
+                                        <span class="text-muted text-decoration-line-through">${{ product.price }}</span>
+                                    {% else %}
+                                        <span class="fw-bold">${{ product.price }}</span>
+                                    {% endif %}
                                 </div>
                                 <a href="{% url 'users:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-eye"></i> View
@@ -309,26 +347,6 @@
             {% empty %}
                 <div class="col-12 text-center">
                     <p class="text-muted">New products coming soon.</p>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- Brands Section -->
-<section class="py-5">
-    <div class="container">
-        <div class="text-center mb-4">
-            <h3>Trusted Sports Brands</h3>
-            <p class="text-muted">We partner with the best to bring you quality</p>
-        </div>
-        
-        <div class="row align-items-center justify-content-center">
-            {% for brand in "Nike,Adidas,Puma,Under Armour,New Balance,Wilson"|split:"," %}
-                <div class="col-4 col-md-2 text-center mb-4">
-                    <img src="https://via.placeholder.com/150x80?text={{ brand }}" 
-                         class="img-fluid opacity-75 hover-opacity-100" 
-                         alt="{{ brand }}">
                 </div>
             {% endfor %}
         </div>

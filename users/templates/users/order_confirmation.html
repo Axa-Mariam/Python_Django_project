@@ -1,0 +1,264 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Order Confirmation - SportsPro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confirmation-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .confirmation-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+        color: white;
+    }
+    
+    .success-icon {
+        font-size: 3rem;
+        color: white;
+        margin-bottom: 1rem;
+    }
+    
+    .order-details {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .order-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+    
+    .payment-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .payment-badge-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .payment-badge-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .order-summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .order-total-row {
+        font-size: 1.1rem;
+        font-weight: bold;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+        border-top: 2px solid #eee;
+    }
+    
+    .next-steps {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .step-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed #eee;
+    }
+    
+    .step-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+    
+    .action-buttons {
+        text-align: center;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container py-4">
+    <div class="confirmation-container">
+        <!-- Confirmation Header -->
+        <div class="confirmation-header">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Thank You for Your Order!</h2>
+            <p class="mb-0">Your order has been received and is now being processed.</p>
+            <p class="text-light opacity-75">Order #{{ order.id }}</p>
+        </div>
+        
+        <!-- Order Details -->
+        <div class="order-details">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Order Information</h5>
+                    <p class="mb-1">
+                        <span class="text-muted">Date:</span> 
+                        {{ order.created_at|date:"M d, Y" }}
+                    </p>
+                    <p class="mb-1">
+                        <span class="text-muted">Status:</span> 
+                        {{ order.get_status_display }}
+                    </p>
+                    <p class="mb-1">
+                        <span class="text-muted">Payment Method:</span> 
+                        {{ order.get_payment_method_display }}
+                    </p>
+                    <p class="mb-3">
+                        <span class="text-muted">Payment Status:</span> 
+                        {% if order.payment_status %}
+                            <span class="payment-badge payment-badge-success">Paid</span>
+                        {% else %}
+                            <span class="payment-badge payment-badge-pending">Pending</span>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Shipping Address</h5>
+                    <p class="mb-1">{{ order.user.get_full_name }}</p>
+                    <p class="mb-1">{{ order.shipping_address }}</p>
+                    <p class="mb-1">{{ order.shipping_city }}, {{ order.shipping_postal_code }}</p>
+                    <p class="mb-1">{{ order.shipping_country }}</p>
+                </div>
+            </div>
+            
+            <h5>Ordered Items</h5>
+            {% for item in order_items %}
+                <div class="order-item">
+                    <div class="row align-items-center">
+                        <div class="col-2 col-md-1">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" class="item-image" alt="{{ item.product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/70?text=Product" class="item-image" alt="{{ item.product.name }}">
+                            {% endif %}
+                        </div>
+                        <div class="col-6 col-md-7">
+                            <h6 class="mb-0">{{ item.product.name }}</h6>
+                            <small class="text-muted">{{ item.product.category.name }}</small>
+                        </div>
+                        <div class="col-2 col-md-2 text-center">
+                            <span>{{ item.quantity }}x</span>
+                        </div>
+                        <div class="col-2 col-md-2 text-end">
+                            <span>${{ item.get_total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div class="order-summary mt-4">
+                <div class="order-summary-row">
+                    <span>Subtotal</span>
+                    <span>${{ order.total_amount|floatformat:2 }}</span>
+                </div>
+                <div class="order-summary-row">
+                    <span>Shipping</span>
+                    <span>Free</span>
+                </div>
+                {% if order.discount_amount %}
+                    <div class="order-summary-row text-success">
+                        <span>Discount</span>
+                        <span>-${{ order.discount_amount|floatformat:2 }}</span>
+                    </div>
+                {% endif %}
+                <div class="order-summary-row order-total-row">
+                    <span>Total</span>
+                    <span>${{ order.total_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Next Steps -->
+        <div class="next-steps">
+            <h5 class="mb-3">What's Next?</h5>
+            
+            <div class="step-item d-flex">
+                <div class="step-number">1</div>
+                <div>
+                    <h6>Order Processing</h6>
+                    <p class="text-muted mb-0">We're preparing your order for shipping. You'll receive a notification when your order is ready.</p>
+                </div>
+            </div>
+            
+            <div class="step-item d-flex">
+                <div class="step-number">2</div>
+                <div>
+                    <h6>Shipping</h6>
+                    <p class="text-muted mb-0">Once shipped, you'll receive tracking information via email and in your order history.</p>
+                </div>
+            </div>
+            
+            <div class="step-item d-flex">
+                <div class="step-number">3</div>
+                <div>
+                    <h6>Delivery</h6>
+                    <p class="text-muted mb-0">Your items will be delivered to the shipping address you provided. Enjoy your new sports equipment!</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Next Steps and Actions -->
+        <div class="action-buttons">
+            <a href="{% url 'users:order_history' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-list me-2"></i>View All Orders
+            </a>
+            <a href="{% url 'users:order_detail' order.id %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-eye me-2"></i>Order Details
+            </a>
+            <a href="{% url 'users:product_list' %}" class="btn btn-sports">
+                <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

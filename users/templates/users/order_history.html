@@ -1,0 +1,286 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Your Orders - SportsPro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-history-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        padding: 2rem 0;
+        color: white;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+    
+    .filter-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .orders-container {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+    }
+    
+    .order-card {
+        border: 1px solid #eee;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    
+    .order-card:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .order-header {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px 10px 0 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .order-body {
+        padding: 1rem;
+    }
+    
+    .order-footer {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0 0 10px 10px;
+        border-top: 1px solid #eee;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-processing {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+    
+    .status-shipped {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .status-delivered {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .payment-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .payment-badge-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .payment-badge-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .empty-orders {
+        padding: 3rem 0;
+        text-align: center;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Order History Header -->
+            <div class="order-history-header text-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-shopping-bag me-2"></i> Your Orders
+                </h2>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filter-container mb-4">
+                <h5 class="mb-3">Filter Orders</h5>
+                <form method="GET" action="{% url 'users:order_history' %}" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="order_id" class="form-label">Order ID</label>
+                        <input type="text" name="order_id" id="order_id" class="form-control" value="{{ form.order_id.value|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {% if form.status.value == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="processing" {% if form.status.value == 'processing' %}selected{% endif %}>Processing</option>
+                            <option value="shipped" {% if form.status.value == 'shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="delivered" {% if form.status.value == 'delivered' %}selected{% endif %}>Delivered</option>
+                            <option value="cancelled" {% if form.status.value == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label">From Date</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ form.date_from.value|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label">To Date</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ form.date_to.value|default:'' }}">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filter
+                        </button>
+                        <a href="{% url 'users:order_history' %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-sync-alt me-2"></i>Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Orders List -->
+            <div class="orders-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">All Orders</h4>
+                    <span class="badge bg-secondary">{{ orders|length }} Orders</span>
+                </div>
+                
+                {% if orders %}
+                    {% for order in orders %}
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        <h6 class="mb-1">Order #{{ order.id }}</h6>
+                                        <small class="text-muted">{{ order.created_at|date:"F d, Y" }}</small>
+                                    </div>
+                                    <div class="col-md-4 text-md-center">
+                                        <span class="status-badge 
+                                            {% if order.status == 'pending' %}status-pending
+                                            {% elif order.status == 'processing' %}status-processing
+                                            {% elif order.status == 'shipped' %}status-shipped
+                                            {% elif order.status == 'delivered' %}status-delivered
+                                            {% elif order.status == 'cancelled' %}status-cancelled{% endif %}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-4 text-md-end">
+                                        <span class="payment-badge 
+                                            {% if order.payment_status %}payment-badge-success{% else %}payment-badge-pending{% endif %}">
+                                            {% if order.payment_status %}Paid{% else %}Pending Payment{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="order-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="mb-2">Items</h6>
+                                        <div class="d-flex flex-wrap">
+                                            {% for item in order.items.all %}
+                                                <div class="me-3 mb-2">
+                                                    {% if item.product.image %}
+                                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" 
+                                                            style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                                    {% else %}
+                                                        <div style="width: 50px; height: 50px; background-color: #eee; border-radius: 5px; 
+                                                            display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-box"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                            
+                                            {% if order.items.count > 4 %}
+                                                <div class="me-3 mb-2">
+                                                    <div style="width: 50px; height: 50px; background-color: #eee; border-radius: 5px; 
+                                                        display: flex; align-items: center; justify-content: center;">
+                                                        <small>+{{ order.items.count|add:"-4" }}</small>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-md-end">
+                                        <h6 class="mb-2">Total Amount</h6>
+                                        <h5 class="text-primary">${{ order.total_amount|floatformat:2 }}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="order-footer d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="me-3">
+                                        <i class="fas fa-truck me-1 text-muted"></i>
+                                        {% if order.status == 'shipped' or order.status == 'delivered' %}
+                                            {% if order.tracking_number %}
+                                                Tracking: {{ order.tracking_number }}
+                                            {% else %}
+                                                Shipped
+                                            {% endif %}
+                                        {% else %}
+                                            {{ order.get_status_display }}
+                                        {% endif %}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-money-bill me-1 text-muted"></i>
+                                        {{ order.get_payment_method_display }}
+                                    </span>
+                                </div>
+                                <a href="{% url 'users:order_detail' order.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- No Orders -->
+                    <div class="empty-orders">
+                        <div class="empty-icon">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <h5>No orders found</h5>
+                        <p class="text-muted">
+                            You haven't placed any orders yet, or no orders match your search criteria.
+                        </p>
+                        <a href="{% url 'users:product_list' %}" class="btn btn-sports mt-3">
+                            <i class="fas fa-shopping-cart me-2"></i>Start Shopping
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

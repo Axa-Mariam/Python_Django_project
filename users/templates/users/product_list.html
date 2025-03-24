@@ -170,6 +170,48 @@
         background-color: #6a11cb;
     }
     
+    .product-quantity-wrapper {
+        display: none;
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 5px 10px;
+        border-radius: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 3;
+        transition: all 0.3s;
+    }
+    
+    .product-card:hover .product-quantity-wrapper {
+        display: flex;
+        align-items: center;
+    }
+    
+    .quantity-btn {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #2575fc 0%, #6a11cb 100%);
+        color: white;
+        border: none;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .quantity-input {
+        width: 40px;
+        text-align: center;
+        border: none;
+        background: transparent;
+        font-weight: bold;
+        margin: 0 5px;
+    }
+    
     @media (max-width: 767.98px) {
         .filter-sidebar {
             margin-bottom: 2rem;
@@ -222,7 +264,7 @@
             <div class="col-lg-3">
                 <div class="filter-sidebar mb-4">
                     <h5 class="filter-header">Filter Products</h5>
-                    <form method="get" action="">
+                    <form method="get" action="{% url 'users:filter_products' %}">
                         <!-- Categories Filter -->
                         <div class="filter-group">
                             <h6>Categories</h6>
@@ -232,10 +274,10 @@
                                     All Categories
                                 </label>
                             </div>
-                            {% for cat in all_categories %}
+                            {% for cat in categories %}
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="category" id="category-{{ cat.id }}" 
-                                           value="{{ cat.slug }}" {% if category.slug == cat.slug %}checked{% endif %}>
+                                           value="{{ cat.id }}" {% if category.id == cat.id %}checked{% endif %}>
                                     <label class="form-check-label" for="category-{{ cat.id }}">
                                         {{ cat.name }}
                                     </label>
@@ -257,6 +299,32 @@
                                        value="{{ request.GET.max_price|default:1000 }}">
                             </div>
                         </div>
+                        
+                        <!-- Brand Filter -->
+                        {% if brands %}
+                        <div class="filter-group">
+                            <h6>Brands</h6>
+                            <select name="brand" class="form-select">
+                                <option value="">All Brands</option>
+                                {% for brand_code, brand_name in brands %}
+                                <option value="{{ brand_code }}" {% if selected_brand == brand_code %}selected{% endif %}>{{ brand_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Size Filter -->
+                        {% if sizes %}
+                        <div class="filter-group">
+                            <h6>Size</h6>
+                            <select name="size" class="form-select">
+                                <option value="">All Sizes</option>
+                                {% for size_code, size_name in sizes %}
+                                <option value="{{ size_code }}" {% if selected_size == size_code %}selected{% endif %}>{{ size_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
                         
                         <!-- Availability Filter -->
                         <div class="filter-group">
@@ -301,29 +369,29 @@
                         <label class="me-2">Sort by:</label>
                         <div class="dropdown sort-dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                {% if request.GET.sort == 'price_low' %}
+                                {% if request.GET.sort == 'price_asc' %}
                                     Price: Low to High
-                                {% elif request.GET.sort == 'price_high' %}
+                                {% elif request.GET.sort == 'price_desc' %}
                                     Price: High to Low
                                 {% elif request.GET.sort == 'newest' %}
                                     Newest First
-                                {% elif request.GET.sort == 'popular' %}
-                                    Most Popular
+                                {% elif request.GET.sort == 'name' %}
+                                    Name (A-Z)
                                 {% else %}
-                                    Relevance
+                                    Default Sorting
                                 {% endif %}
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                                <li><a class="dropdown-item {% if request.GET.sort == 'relevance' or not request.GET.sort %}active{% endif %}" 
-                                      href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=relevance">Relevance</a></li>
-                                <li><a class="dropdown-item {% if request.GET.sort == 'price_low' %}active{% endif %}" 
-                                      href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=price_low">Price: Low to High</a></li>
-                                <li><a class="dropdown-item {% if request.GET.sort == 'price_high' %}active{% endif %}" 
-                                      href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=price_high">Price: High to Low</a></li>
+                                <li><a class="dropdown-item {% if not request.GET.sort %}active{% endif %}" 
+                                      href="{% url 'users:product_list' %}{% if category %}{{ category.get_absolute_url }}{% endif %}">Default Sorting</a></li>
+                                <li><a class="dropdown-item {% if request.GET.sort == 'price_asc' %}active{% endif %}" 
+                                      href="{% url 'users:product_list' %}{% if category %}{{ category.get_absolute_url }}{% endif %}?sort=price_asc">Price: Low to High</a></li>
+                                <li><a class="dropdown-item {% if request.GET.sort == 'price_desc' %}active{% endif %}" 
+                                      href="{% url 'users:product_list' %}{% if category %}{{ category.get_absolute_url }}{% endif %}?sort=price_desc">Price: High to Low</a></li>
                                 <li><a class="dropdown-item {% if request.GET.sort == 'newest' %}active{% endif %}" 
-                                      href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=newest">Newest First</a></li>
-                                <li><a class="dropdown-item {% if request.GET.sort == 'popular' %}active{% endif %}" 
-                                      href="?{% if request.GET.category %}category={{ request.GET.category }}&{% endif %}sort=popular">Most Popular</a></li>
+                                      href="{% url 'users:product_list' %}{% if category %}{{ category.get_absolute_url }}{% endif %}?sort=newest">Newest First</a></li>
+                                <li><a class="dropdown-item {% if request.GET.sort == 'name' %}active{% endif %}" 
+                                      href="{% url 'users:product_list' %}{% if category %}{{ category.get_absolute_url }}{% endif %}?sort=name">Name (A-Z)</a></li>
                             </ul>
                         </div>
                     </div>
@@ -350,10 +418,10 @@
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         
-                                        <form method="post" action="{% url 'users:add_to_cart' product.id %}" class="d-inline">
+                                        <form method="post" action="{% url 'users:add_to_cart' product.id %}" class="d-inline add-to-cart-form-{{ product.id }}">
                                             {% csrf_token %}
-                                            <input type="hidden" name="quantity" value="1">
-                                            <button type="submit" class="product-action-btn border-0">
+                                            <input type="hidden" name="quantity" value="1" class="quantity-hidden-{{ product.id }}">
+                                            <button type="submit" class="product-action-btn border-0 add-cart-direct-btn" data-product-id="{{ product.id }}">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>
                                         </form>
@@ -364,6 +432,13 @@
                                                 <i class="{% if product in user_wishlist %}fas{% else %}far{% endif %} fa-heart"></i>
                                             </button>
                                         </form>
+                                    </div>
+                                    
+                                    <!-- Enhanced Quantity Selector -->
+                                    <div class="product-quantity-wrapper">
+                                        <button class="quantity-btn dec-btn" data-product-id="{{ product.id }}">-</button>
+                                        <input type="text" value="1" class="quantity-input" id="quantity-{{ product.id }}" readonly>
+                                        <button class="quantity-btn inc-btn" data-product-id="{{ product.id }}" data-max-stock="{{ product.stock }}">+</button>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -448,8 +523,8 @@
 
 {% block extra_js %}
 <script>
-    // Price range slider
     document.addEventListener('DOMContentLoaded', function() {
+        // Price range slider
         const minPriceInput = document.getElementById('min-price');
         const maxPriceInput = document.getElementById('max-price');
         const minPriceDisplay = document.getElementById('min-price-display');
@@ -479,6 +554,58 @@
                 }
             });
         }
+        
+        // Enhanced Quantity Selector
+        const incButtons = document.querySelectorAll('.inc-btn');
+        const decButtons = document.querySelectorAll('.dec-btn');
+        const addCartDirectBtns = document.querySelectorAll('.add-cart-direct-btn');
+        
+        // Increase quantity buttons
+        incButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const productId = this.dataset.productId;
+                const maxStock = parseInt(this.dataset.maxStock) || 20;
+                const quantityInput = document.getElementById(`quantity-${productId}`);
+                const hiddenInput = document.querySelector(`.quantity-hidden-${productId}`);
+                
+                let currentVal = parseInt(quantityInput.value);
+                if (currentVal < maxStock) {
+                    currentVal++;
+                    quantityInput.value = currentVal;
+                    hiddenInput.value = currentVal;
+                }
+            });
+        });
+        
+        // Decrease quantity buttons
+        decButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const productId = this.dataset.productId;
+                const quantityInput = document.getElementById(`quantity-${productId}`);
+                const hiddenInput = document.querySelector(`.quantity-hidden-${productId}`);
+                
+                let currentVal = parseInt(quantityInput.value);
+                if (currentVal > 1) {
+                    currentVal--;
+                    quantityInput.value = currentVal;
+                    hiddenInput.value = currentVal;
+                }
+            });
+        });
+        
+        // Update hidden input before form submission
+        addCartDirectBtns.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const productId = this.dataset.productId;
+                const quantityInput = document.getElementById(`quantity-${productId}`);
+                const hiddenInput = document.querySelector(`.quantity-hidden-${productId}`);
+                
+                hiddenInput.value = quantityInput.value;
+                // Let the form submit normally
+            });
+        });
     });
 </script>
 {% endblock %}

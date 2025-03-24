@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
-from django.db.models import Q, Sum
+from django.db.models import Q
 from django.urls import reverse
 from django.conf import settings
 import uuid
@@ -15,7 +15,7 @@ from .forms import (
     UserRegistrationForm, UserLoginForm, UserProfileUpdateForm, 
     UserPasswordChangeForm, CartItemForm, ShippingAddressForm,
     PaymentMethodForm, CreditCardPaymentForm, OrderSearchForm,
-    ProductForm, ProductDiscountForm, NotificationForm 
+    NotificationForm
 )
 from .models import (
     Notification, Product, Category, CartItem, Order,
@@ -32,8 +32,8 @@ def userRegister(request):
             login(request, user)
             create_notification(
                 user=user,
-                title="Welcome to our store!",
-                message="Thank you for registering. Start shopping today!",
+                title="Welcome to our Sports Store!",
+                message="Thank you for registering. Start shopping for your sports equipment today!",
                 notification_type='info'
             )
             return redirect('users:dashboard')
@@ -117,11 +117,7 @@ def profileUpdate(request):
     if request.method == 'POST':
         form = UserProfileUpdateForm(request.POST, instance=user)
         if form.is_valid():
-            # Clean and format data before saving
-            profile = form.save(commit=False)
-            
-            # Save the profile
-            profile.save()
+            profile = form.save()
             create_notification(
                 user=request.user,
                 title="Profile Updated",
@@ -149,7 +145,7 @@ def profileUpdate(request):
 
 @login_required
 def notificationPanel(request):
-    notifications = request.user.notifications.all().order_by('-created_at')  # Get all notifications
+    notifications = request.user.notifications.all().order_by('-created_at')
     unread_count = request.user.notifications.filter(read=False).count()
     return render(request, 'users/notificationPanel.html', {
         'notifications': notifications,
@@ -232,11 +228,15 @@ def home(request):
     # Get newest arrivals
     new_arrivals = Product.objects.filter(is_available=True).order_by('-created_at')[:4]
     
+    # Get brand choices for brands section
+    product_brands = Product.BRAND_CHOICES
+    
     context = {
         'featured_products': featured_products,
         'categories': categories,
         'discounted_products': discounted_products,
         'new_arrivals': new_arrivals,
+        'product_brands': product_brands,
         'page_title': 'Sports Equipment Store',
     }
     
@@ -280,7 +280,7 @@ def productDetail(request, product_slug):
     ).exclude(id=product.id)[:4]
     
     # Form for adding to cart
-    form = CartItemForm()
+    form = CartItemForm(product=product)
     
     context = {
         'product': product,
@@ -303,6 +303,7 @@ def filterProducts(request):
     brand = request.GET.get('brand')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
+    size = request.GET.get('size')
     sort_by = request.GET.get('sort', 'default')
     
     if category_id:
@@ -310,6 +311,9 @@ def filterProducts(request):
         
     if brand:
         products = products.filter(brand=brand)
+    
+    if size:
+        products = products.filter(size=size)
         
     if min_price:
         products = products.filter(price__gte=min_price)
@@ -328,13 +332,16 @@ def filterProducts(request):
         products = products.order_by('name')
     
     brands = Product.BRAND_CHOICES
+    sizes = Product.SIZE_CATEGORIES
     
     context = {
         'products': products,
         'categories': categories,
         'brands': brands,
+        'sizes': sizes,
         'selected_category': category_id,
         'selected_brand': brand,
+        'selected_size': size,
         'min_price': min_price,
         'max_price': max_price,
         'sort_by': sort_by,
@@ -360,7 +367,7 @@ def addToCart(request, product_id):
                 cart_item.quantity += form.cleaned_data['quantity']
                 cart_item.save()
                 
-            messages.success(request, "Product added to your cart!")
+            messages.success(request, f"{product.name} added to your cart!")
             return redirect('users:cart')
     else:
         form = CartItemForm(product=product)
@@ -385,7 +392,7 @@ def updateCart(request, cart_item_id):
     cart_item = get_object_or_404(CartItem, id=cart_item_id, user=request.user)
     
     if request.method == 'POST':
-        form = CartItemForm(request.POST, instance=cart_item)
+        form = CartItemForm(request.POST, instance=cart_item, product=cart_item.product)
         if form.is_valid():
             # Check if quantity is within stock limits
             quantity = form.cleaned_data['quantity']
@@ -403,9 +410,21 @@ def cart(request):
     cart_items = CartItem.objects.filter(user=request.user)
     cart_total = sum(item.get_total() for item in cart_items)
     
+    # Calculate tax (8%)
+    tax_amount = cart_total * Decimal('0.08')
+    
+    # Add shipping cost
+    shipping_cost = Decimal('5.00')
+    
+    # Calculate grand total
+    grand_total = cart_total + tax_amount + shipping_cost
+    
     context = {
         'cart_items': cart_items,
         'cart_total': cart_total,
+        'tax_amount': tax_amount,
+        'shipping_cost': shipping_cost,
+        'grand_total': grand_total,
     }
     
     return render(request, 'users/cart.html', context)
@@ -422,6 +441,15 @@ def checkout(request):
     
     # Calculate cart total
     cart_total = sum(item.get_total() for item in cart_items)
+    
+    # Calculate tax (8%)
+    tax_amount = cart_total * Decimal('0.08')
+    
+    # Add shipping cost
+    shipping_cost = Decimal('5.00')
+    
+    # Calculate grand total
+    grand_total = cart_total + tax_amount + shipping_cost
     
     if request.method == 'POST':
         shipping_form = ShippingAddressForm(request.POST, user=request.user)
@@ -502,6 +530,9 @@ def checkout(request):
     context = {
         'cart_items': cart_items,
         'cart_total': cart_total,
+        'tax_amount': tax_amount,
+        'shipping_cost': shipping_cost,
+        'grand_total': grand_total,
         'shipping_form': shipping_form,
         'payment_form': payment_form,
     }
@@ -705,51 +736,3 @@ def search(request):
     }
     
     return render(request, 'users/search_results.html', context)
-
-@login_required
-def manage_products(request):
-    """Admin view to manage products"""
-    # Check if user is staff/admin
-    if not request.user.is_staff:
-        messages.error(request, "You don't have permission to access this page.")
-        return redirect('users:dashboard')
-    
-    products = Product.objects.all()
-    
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Product added successfully!")
-            return redirect('users:manage_products')
-    else:
-        form = ProductForm()
-    
-    return render(request, 'users/manage_products.html', {
-        'products': products,
-        'form': form
-    })
-
-@login_required
-def edit_product(request, product_id):
-    """Admin view to edit a product"""
-    # Check if user is staff/admin
-    if not request.user.is_staff:
-        messages.error(request, "You don't have permission to access this page.")
-        return redirect('users:dashboard')
-    
-    product = get_object_or_404(Product, id=product_id)
-    
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Product updated successfully!")
-            return redirect('users:manage_products')
-    else:
-        form = ProductForm(instance=product)
-    
-    return render(request, 'users/edit_product.html', {
-        'form': form,
-        'product': product
-    })

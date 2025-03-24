@@ -1,47 +1,26 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
 from datetime import date
 from django.utils import timezone
 from decimal import Decimal
 
 class Users(AbstractUser):
+    # Simplified choices
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
-        ('O', 'Other'),
-        ('N', 'Prefer not to say')
+        ('O', 'Other')
     ]
-
-    BLOOD_GROUP_CHOICES = [
-        ('A+', 'A+'),
-        ('A-', 'A-'),
-        ('B+', 'B+'),
-        ('B-', 'B-'),
-        ('O+', 'O+'),
-        ('O-', 'O-'),
-        ('AB+', 'AB+'),
-        ('AB-', 'AB-'),
-    ]
-
-    MARITAL_CHOICES = [
-        ('M', 'Married'),
-        ('U', 'Unmarried'),
-        ('N', 'Prefer not to say')
-    ]
-
-    username = models.CharField(unique=True, max_length=25)
+    
     email = models.EmailField(unique=True, error_messages={'unique': "This email is already registered."})
     mobile = models.CharField(max_length=15, unique=True, error_messages={'unique': "This mobile number is already registered."})
     
-    # Personal information
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='N')
-    marital_status = models.CharField(max_length=1, choices=MARITAL_CHOICES, default='N')
+    # Personal information (only keep what's relevant for shipping/accounts)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
-    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, null=True, blank=True)
     
-    # Address information
+    # Address information - essential for shipping
     address = models.TextField(max_length=500, blank=True)
     city = models.CharField(max_length=100, blank=True)
     country = models.CharField(max_length=100, blank=True)
@@ -63,8 +42,7 @@ class Users(AbstractUser):
     
     def get_cart_total(self):
         cart_items = CartItem.objects.filter(user=self)
-        total = sum(item.quantity * item.product.price for item in cart_items)
-        return total
+        return sum(item.get_total() for item in cart_items)
 
 
 class Notification(models.Model):
@@ -145,6 +123,17 @@ class Product(models.Model):
         ('other', 'Other')
     ]
     
+    # Added size and color options for sports equipment
+    SIZE_CATEGORIES = [
+        ('XS', 'Extra Small'),
+        ('S', 'Small'),
+        ('M', 'Medium'),
+        ('L', 'Large'),
+        ('XL', 'Extra Large'),
+        ('XXL', 'Double Extra Large'),
+        ('NA', 'Not Applicable')
+    ]
+    
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
@@ -155,6 +144,8 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/')
     stock = models.PositiveIntegerField(default=0)
     is_available = models.BooleanField(default=True)
+    size = models.CharField(max_length=3, choices=SIZE_CATEGORIES, default='NA')
+    weight = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True, help_text="Weight in kg")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     wishlisted_by = models.ManyToManyField(Users, related_name='wishlisted_items', blank=True)
@@ -233,11 +224,12 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
     payment_status = models.BooleanField(default=False)
     
-    # Shipping details (can use user address if same)
+    # Shipping details
     shipping_address = models.TextField()
     shipping_city = models.CharField(max_length=100)
     shipping_country = models.CharField(max_length=100)
     shipping_postal_code = models.CharField(max_length=20)
+    tracking_number = models.CharField(max_length=50, blank=True, null=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -267,11 +259,10 @@ class PaymentInfo(models.Model):
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
     payment_date = models.DateTimeField(auto_now_add=True)
     
-    # For demo payment gateway
+    # For demo payment gateway (minimal fields)
     card_number = models.CharField(max_length=16, blank=True, null=True)
     card_expiry = models.CharField(max_length=7, blank=True, null=True)
     cardholder_name = models.CharField(max_length=100, blank=True, null=True)
-    cvv = models.CharField(max_length=3, blank=True, null=True)  # Note: In a real app, CVV should never be stored
     payment_status = models.BooleanField(default=False)
     
     def __str__(self):

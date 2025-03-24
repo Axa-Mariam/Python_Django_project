@@ -1,48 +1,46 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_base.html' %}
 {% load static %}
 
-{% block title %}Notifications{% endblock %}
+{% block title %}Your Notifications - SportsPro{% endblock %}
 
 {% block extra_css %}
 <style>
     .notification-header {
-        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-        padding: 3rem 0;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        padding: 2rem 0;
         color: white;
-        margin-top: -3rem;
+        margin-bottom: 2rem;
+        border-radius: 10px;
     }
     
     .notification-container {
         background-color: white;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 2rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
     }
 
     .notification-item {
-        transition: background-color 0.3s;
+        transition: all 0.3s ease;
         border-left: 4px solid transparent;
+        cursor: pointer;
     }
+    
     .notification-item:hover {
         background-color: #f8f9fa;
     }
+    
     .notification-item.unread {
         background-color: #f0f8ff;
-        border-left-color: #0d6efd;
+        border-left-color: var(--primary-color);
     }
-    .notification-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        padding: 3px 6px;
-        border-radius: 50%;
-        background: red;
-        color: white;
-    }
+    
     .notification-time {
         font-size: 0.8rem;
         color: #6c757d;
     }
+    
     .notification-icon {
         width: 40px;
         height: 40px;
@@ -51,83 +49,103 @@
         justify-content: center;
         border-radius: 50%;
     }
+    
     .notification-icon.info { background-color: #cfe2ff; color: #0d6efd; }
     .notification-icon.success { background-color: #d1e7dd; color: #198754; }
     .notification-icon.warning { background-color: #fff3cd; color: #ffc107; }
     .notification-icon.error { background-color: #f8d7da; color: #dc3545; }
+    
+    .empty-notifications {
+        padding: 3rem 0;
+        text-align: center;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: #ccc;
+        margin-bottom: 1rem;
+    }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="notification-header">
-    <div class="container">
-        <h1 class="display-4">Notifications</h1>
-    </div>
-</div>
-<div class="container mt-4 notification-container">
+{% block dashboard_content %}
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-                    <h5 class="mb-0">Notifications</h5>
-                    <div>
-                        <button id="markAllRead" class="btn btn-sm btn-light" {% if not unread_count %}disabled{% endif %}>
-                            Mark All as Read
-                        </button>
-                    </div>
+        <div class="col-lg-10">
+            <!-- Notification Header -->
+            <div class="notification-header text-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-bell me-2"></i> Your Notifications
+                </h2>
+            </div>
+            
+            <!-- Notifications Container -->
+            <div class="notification-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">
+                        {% if unread_count %}
+                            <span class="badge bg-primary rounded-pill me-2">{{ unread_count }}</span>
+                        {% endif %}
+                        All Notifications
+                    </h4>
+                    <button id="markAllRead" class="btn btn-outline-primary btn-sm" {% if not unread_count %}disabled{% endif %}>
+                        <i class="fas fa-check-double me-1"></i> Mark All as Read
+                    </button>
                 </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush" id="notificationList">
-                        {% if notifications %}
-                            {% for notification in notifications %}
-                                <div class="list-group-item notification-item {% if not notification.read %}unread{% endif %}"
-                                     data-notification-id="{{ notification.id }}">
-                                    <div class="d-flex align-items-center">
-                                        <div class="notification-icon {{ notification.notification_type }} me-3">
-                                            {% if notification.notification_type == 'info' %}
-                                                <i class="bi bi-info-circle"></i>
-                                            {% elif notification.notification_type == 'success' %}
-                                                <i class="bi bi-check-circle"></i>
-                                            {% elif notification.notification_type == 'warning' %}
-                                                <i class="bi bi-exclamation-triangle"></i>
-                                            {% else %}
-                                                <i class="bi bi-x-circle"></i>
-                                            {% endif %}
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <h6 class="mb-0">{{ notification.title }}</h6>
-                                                <small class="notification-time">
-                                                    {{ notification.created_at|timesince }} ago
-                                                </small>
-                                            </div>
-                                            <p class="mb-0 text-muted">{{ notification.message }}</p>
-                                            {% if notification.link %}
-                                                <a href="{{ notification.link }}" class="btn btn-sm btn-link px-0">
-                                                    View Details
-                                                </a>
-                                            {% endif %}
-                                        </div>
-                                        {% if not notification.read %}
-                                            <button class="btn btn-sm btn-outline-primary ms-2 mark-read-btn">
-                                                Mark as Read
-                                            </button>
+                
+                {% if notifications %}
+                    <div class="list-group" id="notificationList">
+                        {% for notification in notifications %}
+                            <div class="list-group-item notification-item {% if not notification.read %}unread{% endif %}"
+                                data-notification-id="{{ notification.id }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="notification-icon {{ notification.notification_type }} me-3">
+                                        {% if notification.notification_type == 'info' %}
+                                            <i class="bi bi-info-circle"></i>
+                                        {% elif notification.notification_type == 'success' %}
+                                            <i class="bi bi-check-circle"></i>
+                                        {% elif notification.notification_type == 'warning' %}
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        {% else %}
+                                            <i class="bi bi-x-circle"></i>
                                         {% endif %}
                                     </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">{{ notification.title }}</h6>
+                                            <small class="notification-time">
+                                                {{ notification.created_at|timesince }} ago
+                                            </small>
+                                        </div>
+                                        <p class="mb-0 text-muted">{{ notification.message }}</p>
+                                    </div>
+                                    {% if not notification.read %}
+                                        <button class="btn btn-sm btn-outline-primary ms-2 mark-read-btn">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    {% endif %}
                                 </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="text-center py-5">
-                                <i class="bi bi-bell text-muted fs-1"></i>
-                                <p class="text-muted mt-2">No notifications yet</p>
                             </div>
-                        {% endif %}
+                        {% endfor %}
                     </div>
-                </div>
+                {% else %}
+                    <div class="empty-notifications">
+                        <div class="empty-icon">
+                            <i class="fas fa-bell-slash"></i>
+                        </div>
+                        <h5>No notifications yet</h5>
+                        <p class="text-muted">
+                            You don't have any notifications at the moment.
+                            We'll notify you when there are updates or important information.
+                        </p>
+                    </div>
+                {% endif %}
             </div>
-            <div class="text-center mt-3">
+            
+            <!-- Return Button -->
+            <div class="text-center">
                 <a href="{% url 'users:dashboard' %}" class="btn btn-secondary">
-                    Back to Dashboard
+                    <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
                 </a>
             </div>
         </div>
@@ -138,21 +156,66 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // CSRF Token setup
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 'csrftoken='.length) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring('csrftoken='.length));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrftoken = getCSRFToken();
+    
     // Mark single notification as read
     const markRead = async (notificationId) => {
         try {
-            const response = await fetch(`/users/notifications/mark-read/${notificationId}/`, {
+            const response = await fetch(`{% url 'users:markNotificationRead' notification_id=0 %}`.replace('0', notificationId), {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
                 },
             });
+            
             if (response.ok) {
+                const data = await response.json();
                 const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
                 notification.classList.remove('unread');
+                
                 const markReadBtn = notification.querySelector('.mark-read-btn');
                 if (markReadBtn) markReadBtn.remove();
-                updateUnreadCount();
+                
+                // Update unread count badge
+                document.querySelectorAll('.notification-count').forEach(el => {
+                    el.textContent = data.count;
+                    if (data.count <= 0) {
+                        el.classList.add('d-none');
+                    }
+                });
+                
+                // Update mark all button state
+                const markAllBtn = document.getElementById('markAllRead');
+                if (data.count <= 0 && markAllBtn) {
+                    markAllBtn.setAttribute('disabled', 'disabled');
+                }
+                
+                // Update header badge
+                const headerBadge = document.querySelector('.notification-container h4 .badge');
+                if (headerBadge) {
+                    if (data.count <= 0) {
+                        headerBadge.remove();
+                    } else {
+                        headerBadge.textContent = data.count;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -160,55 +223,63 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Mark all notifications as read
-    document.getElementById('markAllRead').addEventListener('click', async () => {
-        try {
-            const response = await fetch('/users/notifications/mark-all-read/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                },
-            });
-            if (response.ok) {
-                document.querySelectorAll('.notification-item.unread').forEach(item => {
-                    item.classList.remove('unread');
-                    const markReadBtn = item.querySelector('.mark-read-btn');
-                    if (markReadBtn) markReadBtn.remove();
+    const markAllBtn = document.getElementById('markAllRead');
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('{% url "users:markAllNotificationsRead" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Content-Type': 'application/json'
+                    },
                 });
-                document.getElementById('markAllRead').setAttribute('disabled', 'disabled');
-                updateUnreadCount();
+                
+                if (response.ok) {
+                    // Update all unread notifications to read status
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                        const markReadBtn = item.querySelector('.mark-read-btn');
+                        if (markReadBtn) markReadBtn.remove();
+                    });
+                    
+                    // Disable mark all button
+                    markAllBtn.setAttribute('disabled', 'disabled');
+                    
+                    // Update notification counts
+                    document.querySelectorAll('.notification-count').forEach(el => {
+                        el.textContent = '0';
+                        el.classList.add('d-none');
+                    });
+                    
+                    // Remove header badge
+                    const headerBadge = document.querySelector('.notification-container h4 .badge');
+                    if (headerBadge) {
+                        headerBadge.remove();
+                    }
+                }
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
             }
-        } catch (error) {
-            console.error('Error marking all notifications as read:', error);
-        }
-    });
+        });
+    }
 
-    // Handle individual mark as read buttons
+    // Add click event to mark read buttons
     document.querySelectorAll('.mark-read-btn').forEach(button => {
         button.addEventListener('click', (e) => {
+            e.stopPropagation();
             const notificationId = e.target.closest('.notification-item').dataset.notificationId;
             markRead(notificationId);
         });
     });
-
-    // Update unread count
-    const updateUnreadCount = async () => {
-        try {
-            const response = await fetch('/users/notifications/count/');
-            const data = await response.json();
-            const unreadCount = data.count;
-            
-            // Update any UI elements showing the count
-            const countElements = document.querySelectorAll('.notification-count');
-            countElements.forEach(element => {
-                element.textContent = unreadCount;
-                if (unreadCount === 0) {
-                    element.style.display = 'none';
-                }
-            });
-        } catch (error) {
-            console.error('Error updating notification count:', error);
-        }
-    };
+    
+    // Add click event to notification items to mark as read
+    document.querySelectorAll('.notification-item.unread').forEach(item => {
+        item.addEventListener('click', () => {
+            const notificationId = item.dataset.notificationId;
+            markRead(notificationId);
+        });
+    });
 });
 </script>
 {% endblock %}

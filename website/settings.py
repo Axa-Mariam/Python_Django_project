@@ -40,7 +40,6 @@ INSTALLED_APPS = [
 ]
 
 INSTALLED_APPS += [
-    'core',
     'users',
     'crispy_forms',
     'crispy_bootstrap5',
@@ -140,3 +139,7 @@ STATICFILES_FINDERS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Add to settings.py
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
