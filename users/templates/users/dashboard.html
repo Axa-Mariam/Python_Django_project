@@ -75,7 +75,7 @@
             <div class="card stats-card border-0 bg-danger bg-gradient text-white">
                 <div class="card-body p-3">
                     <h6 class="text-white-50">Notifications</h6>
-                    <h3>{{ user.notifications.filter.count|default:"0" }}</h3>
+                    <h3>{{ unread_notifications_count|default:"0" }}</h3>
                     <a href="{% url 'users:notifications' %}" class="btn btn-sm btn-light mt-2">View</a>
                 </div>
             </div>

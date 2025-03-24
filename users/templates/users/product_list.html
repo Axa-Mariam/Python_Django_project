@@ -300,21 +300,30 @@
                             </div>
                         </div>
                         
-                        <!-- Brand Filter -->
-                        {% if brands %}
+                        <!-- Brand Filter - replace existing section with this: -->
                         <div class="filter-group">
                             <h6>Brands</h6>
                             <select name="brand" class="form-select">
                                 <option value="">All Brands</option>
-                                {% for brand_code, brand_name in brands %}
-                                <option value="{{ brand_code }}" {% if selected_brand == brand_code %}selected{% endif %}>{{ brand_name }}</option>
-                                {% endfor %}
+                                {% if brands %}
+                                    {% for brand_code, brand_name in brands %}
+                                    <option value="{{ brand_code }}" {% if selected_brand == brand_code %}selected{% endif %}>{{ brand_name }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="nike">Nike</option>
+                                    <option value="adidas">Adidas</option>
+                                    <option value="puma">Puma</option>
+                                    <option value="reebok">Reebok</option>
+                                    <option value="under_armour">Under Armour</option>
+                                    <option value="new_balance">New Balance</option>
+                                    <option value="wilson">Wilson</option>
+                                    <option value="speedo">Speedo</option>
+                                    <option value="other">Other</option>
+                                {% endif %}
                             </select>
                         </div>
-                        {% endif %}
                         
-                        <!-- Size Filter -->
-                        {% if sizes %}
+                        <!-- Size Filter - replace existing section with this: -->
                         <div class="filter-group">
                             <h6>Size</h6>
                             <select name="size" class="form-select">
@@ -324,7 +333,6 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        {% endif %}
                         
                         <!-- Availability Filter -->
                         <div class="filter-group">
@@ -606,6 +614,30 @@
                 // Let the form submit normally
             });
         });
+    });
+
+    // Make sure filter form has complete data
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the filter form
+        const filterForm = document.querySelector('.filter-sidebar form');
+        
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                // Prevent submission if min price and max price are both at defaults and no other filters are selected
+                const minPrice = document.getElementById('min-price').value;
+                const maxPrice = document.getElementById('max-price').value;
+                const categorySelected = document.querySelector('input[name="category"]:checked:not([value=""])');
+                const brandSelected = document.querySelector('select[name="brand"]')?.value;
+                const sizeSelected = document.querySelector('select[name="size"]')?.value;
+                
+                // If no filters are actually being applied, prevent the default submission
+                // and just reload the current page with no filters
+                if (minPrice === '0' && maxPrice === '1000' && !categorySelected && !brandSelected && !sizeSelected) {
+                    e.preventDefault();
+                    window.location.href = "{% url 'users:product_list' %}";
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

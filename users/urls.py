@@ -33,6 +33,7 @@ urlpatterns = [
     path('add-to-cart/<int:product_id>/', views.addToCart, name='add_to_cart'),
     path('remove-from-cart/<int:cart_item_id>/', views.removeFromCart, name='remove_from_cart'),
     path('update-cart/<int:cart_item_id>/', views.updateCart, name='update_cart'),
+    path('update-cart-ajax/', views.updateCartAjax, name='update_cart_ajax'),
     
     # Checkout and order routes
     path('checkout/', views.checkout, name='checkout'),
@@ -40,6 +41,7 @@ urlpatterns = [
     path('order-confirmation/<int:order_id>/', views.orderConfirmation, name='order_confirmation'),
     path('order-history/', views.orderHistory, name='order_history'),
     path('order-detail/<int:order_id>/', views.orderDetail, name='order_detail'),
+    path('order/<int:order_id>/cancel/', views.cancelOrder, name='cancel_order'),
     
     # Wishlist routes
     path('wishlist/', views.wishlist, name='wishlist'),

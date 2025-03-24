@@ -189,7 +189,7 @@
 <!-- Cart Header -->
 <section class="cart-header">
     <div class="container">
-        <h1 class="display-5 fw-bold">Shopping Cart</h1>
+        <h1 class="fw-bold">Shopping Cart</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{% url 'users:home' %}" class="text-white">Home</a></li>
@@ -202,160 +202,159 @@
 <!-- Cart Content -->
 <div class="container">
     {% if cart_items %}
-        <div class="row">
-            <!-- Cart Items -->
-            <div class="col-lg-8 mb-4 mb-lg-0">
-                <div class="cart-container">
-                    <h5 class="mb-4">Your Cart ({{ cart_items|length }} items)</h5>
-                    
-                    <!-- Cart Items List -->
-                    {% for item in cart_items %}
-                        <div class="cart-item">
-                            <div class="row align-items-center">
-                                <!-- Product Image -->
-                                <div class="col-md-2 col-4">
-                                    {% if item.product.image %}
-                                        <img src="{{ item.product.image.url }}" class="product-img" alt="{{ item.product.name }}">
-                                    {% else %}
-                                        <img src="https://via.placeholder.com/100x100?text=No+Image" class="product-img" alt="{{ item.product.name }}">
-                                    {% endif %}
-                                </div>
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="cart-container">
+                <h4 class="mb-4">Your Cart ({{ cart_items|length }} items)</h4>
+                
+                {% for item in cart_items %}
+                <div class="cart-item" id="cart-item-{{ item.id }}">
+                    <div class="row align-items-center">
+                        <!-- Product Image -->
+                        <div class="col-md-2 col-4 mb-3 mb-md-0">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" class="product-img" alt="{{ item.product.name }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/100x100" class="product-img" alt="{{ item.product.name }}">
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Product Info -->
+                        <div class="col-md-4 col-8 mb-3 mb-md-0">
+                            <h5 class="mb-1">{{ item.product.name }}</h5>
+                            <div class="text-muted small mb-2">
+                                {% if item.product.brand %}
+                                <span class="me-2">{{ item.product.get_brand_display }}</span>
+                                {% endif %}
                                 
-                                <!-- Product Details -->
-                                <div class="col-md-4 col-8">
-                                    <h6 class="mb-1">
-                                        <a href="{% url 'users:product_detail' item.product.slug %}" class="text-decoration-none text-dark">
-                                            {{ item.product.name }}
-                                        </a>
-                                    </h6>
-                                    {% if item.product.category %}
-                                        <p class="text-muted small mb-0">{{ item.product.category.name }}</p>
-                                    {% endif %}
-                                    <div class="mt-2">
-                                        {% if item.product.discount_price %}
-                                            <span class="discount-price">${{ item.product.discount_price }}</span>
-                                            <span class="original-price ms-1">${{ item.product.price }}</span>
-                                            <span class="discount-badge ms-2">-{{ item.product.discount_percent }}%</span>
-                                        {% else %}
-                                            <span>${{ item.product.price }}</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                                {% if item.size %}
+                                <span class="me-2">Size: {{ item.size }}</span>
+                                {% endif %}
                                 
-                                <!-- Quantity Selector - Simplified -->
-                                <div class="col-md-3 col-12 my-3 my-md-0">
-                                    <form method="post" action="{% url 'users:update_cart' item.id %}" class="quantity-update-form">
-                                        {% csrf_token %}
-                                        <div class="quantity-selector">
-                                            <button type="button" class="quantity-btn decrease-btn" data-item-id="{{ item.id }}">
-                                                <i class="fas fa-minus"></i>
-                                            </button>
-                                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" 
-                                                class="quantity-input item-quantity" data-item-id="{{ item.id }}"
-                                                data-price="{% if item.product.discount_price %}{{ item.product.discount_price }}{% else %}{{ item.product.price }}{% endif %}">
-                                            <button type="button" class="quantity-btn increase-btn" data-item-id="{{ item.id }}" data-max-stock="{{ item.product.stock }}">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </div>
-                                    </form>
+                                {% if item.color %}
+                                <span>Color: {{ item.color }}</span>
+                                {% endif %}
+                            </div>
+                            {% if item.product.stock <= 5 %}
+                                <div class="text-danger small">
+                                    <i class="fas fa-exclamation-circle"></i> Only {{ item.product.stock }} left
                                 </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Quantity -->
+                        <div class="col-md-3 col-6 mb-3 mb-md-0">
+                            <div class="quantity-selector">
+                                <button type="button" class="quantity-btn decrease-btn" 
+                                        data-item-id="{{ item.id }}" aria-label="Decrease quantity">
+                                    <i class="fas fa-minus"></i>
+                                </button>
                                 
-                                <!-- Item Total & Controls -->
-                                <div class="col-md-3 col-12 text-md-end text-center">
-                                    <p class="fw-bold mb-2 item-price" data-item-id="{{ item.id }}">${{ item.get_total }}</p>
-                                    <div>
-                                        <button type="button" class="item-action update update-cart" data-item-id="{{ item.id }}" title="Update Quantity">
-                                            <i class="fas fa-sync-alt"></i>
-                                        </button>
-                                        <form method="post" action="{% url 'users:remove_from_cart' item.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <button type="submit" class="item-action remove" title="Remove from Cart">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                        <form method="post" action="{% url 'users:toggle_wishlist' item.product.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <button type="submit" class="item-action wishlist" title="Add to Wishlist">
-                                                <i class="far fa-heart"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+                                <input type="number" min="1" max="{{ item.product.stock }}" value="{{ item.quantity }}" 
+                                       class="quantity-input item-quantity" 
+                                       data-item-id="{{ item.id }}"
+                                       data-price="{{ item.product.get_discount_price }}"
+                                       data-max-stock="{{ item.product.stock }}"
+                                       aria-label="Item quantity">
+                                
+                                <button type="button" class="quantity-btn increase-btn" 
+                                        data-item-id="{{ item.id }}"
+                                        data-max-stock="{{ item.product.stock }}"
+                                        aria-label="Increase quantity">
+                                    <i class="fas fa-plus"></i>
+                                </button>
                             </div>
                         </div>
-                    {% endfor %}
-                    
-                    <!-- Continue Shopping Button -->
-                    <div class="text-center mt-4">
-                        <a href="{% url 'users:product_list' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-arrow-left me-2"></i>Continue Shopping
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Order Summary -->
-            <div class="col-lg-4">
-                <div class="cart-summary">
-                    <h5 class="mb-4">Order Summary</h5>
-                    
-                    <!-- Summary Details -->
-                    <div class="summary-item">
-                        <span>Subtotal</span>
-                        <span id="subtotal">${{ cart_total }}</span>
-                    </div>
-                    
-                    <div class="summary-item">
-                        <span>Shipping</span>
-                        <span id="shipping">${{ shipping_cost|default:"5.00" }}</span>
-                    </div>
-                    
-                    <div class="summary-item">
-                        <span>Tax (8%)</span>
-                        <span id="tax">${{ tax_amount|floatformat:2 }}</span>
-                    </div>
-                    
-                    <!-- Total -->
-                    <div class="summary-item summary-total">
-                        <span>Total</span>
-                        <span id="total">${{ grand_total|floatformat:2 }}</span>
-                    </div>
-                    
-                    <!-- Checkout Button -->
-                    <div class="d-grid gap-2 mt-4">
-                        <a href="{% url 'users:checkout' %}" class="btn btn-sports btn-lg">
-                            <i class="fas fa-lock me-2"></i>Proceed to Checkout
-                        </a>
-                    </div>
-                    
-                    <!-- Payment Methods -->
-                    <div class="text-center mt-3">
-                        <p class="text-muted small mb-2">Secure Payment Methods</p>
-                        <div class="payment-icons">
-                            <i class="fab fa-cc-visa fa-2x me-2"></i>
-                            <i class="fab fa-cc-mastercard fa-2x me-2"></i>
-                            <i class="fab fa-cc-amex fa-2x me-2"></i>
-                            <i class="fab fa-cc-paypal fa-2x"></i>
+                        
+                        <!-- Price & Actions -->
+                        <div class="col-md-3 col-6 text-end">
+                            <div class="item-price mb-2" data-item-id="{{ item.id }}">
+                                ${{ item.get_total }}
+                            </div>
+                            
+                            <div class="item-actions">
+                                <button type="button" class="item-action update update-cart" 
+                                        data-item-id="{{ item.id }}" title="Update">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                                
+                                <button type="button" class="item-action remove remove-from-cart"
+                                        data-item-id="{{ item.id }}" title="Remove">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                
+                                <form id="remove-form-{{ item.id }}" 
+                                      action="{% url 'users:remove_from_cart' item.id %}" 
+                                      method="post" style="display:none;">
+                                    {% csrf_token %}
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'users:product_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                    </a>
+                </div>
             </div>
         </div>
+        
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="cart-summary" id="cart-summary">
+                <h4 class="mb-4">Order Summary</h4>
+                
+                <div class="summary-item">
+                    <span>Subtotal</span>
+                    <span id="subtotal">${{ cart_subtotal }}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Shipping</span>
+                    <span id="shipping">${{ shipping_cost }}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Tax (8%)</span>
+                    <span id="tax">${{ tax_amount|floatformat:2 }}</span>
+                </div>
+                
+                <div class="summary-item summary-total">
+                    <span>Total</span>
+                    <span id="total">${{ grand_total|floatformat:2 }}</span>
+                </div>
+                
+                <!-- Checkout Button -->
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{% url 'users:checkout' %}" class="btn btn-sports btn-lg">
+                        Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+                
+                <!-- Accepted Payment Methods -->
+                <div class="mt-4 text-center">
+                    <p class="text-muted small mb-2">We Accept</p>
+                    <div class="payment-icons">
+                        <i class="fab fa-cc-visa fa-2x me-2"></i>
+                        <i class="fab fa-cc-mastercard fa-2x me-2"></i>
+                        <i class="fab fa-cc-amex fa-2x me-2"></i>
+                        <i class="fab fa-cc-paypal fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     {% else %}
-        <!-- Empty Cart -->
-        <div class="empty-cart">
-            <i class="fas fa-shopping-cart"></i>
-            <h3>Your cart is empty</h3>
-            <p class="text-muted mb-4">Looks like you haven't added any products to your cart yet.</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="{% url 'users:product_list' %}" class="btn btn-sports">
-                    <i class="fas fa-shopping-bag me-2"></i>Start Shopping
-                </a>
-                <a href="{% url 'users:wishlist' %}" class="btn btn-outline-primary">
-                    <i class="far fa-heart me-2"></i>View Wishlist
-                </a>
-            </div>
-        </div>
+    <div class="cart-container empty-cart">
+        <i class="fas fa-shopping-cart"></i>
+        <h3 class="mb-4">Your cart is empty</h3>
+        <p class="text-muted mb-4">Looks like you haven't added any products to your cart yet.</p>
+        <a href="{% url 'users:product_list' %}" class="btn btn-sports">
+            <i class="fas fa-shopping-bag me-2"></i>Browse Products
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
@@ -363,26 +362,62 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Calculate initial tax amount
-        const taxRate = 0.08; // 8% tax rate
-        const subtotalText = document.getElementById('subtotal').textContent;
-        const subtotal = parseFloat(subtotalText.replace('$', ''));
-        const taxAmount = (subtotal * taxRate).toFixed(2);
-        document.getElementById('tax').textContent = '$' + taxAmount;
-        
-        // Calculate initial shipping
-        const shippingText = document.getElementById('shipping').textContent;
-        const shipping = parseFloat(shippingText.replace('$', ''));
-        
-        // Calculate initial total
-        const total = (subtotal + parseFloat(taxAmount) + shipping).toFixed(2);
-        document.getElementById('total').textContent = '$' + total;
-        
         // Elements
         const quantityInputs = document.querySelectorAll('.item-quantity');
         const decreaseButtons = document.querySelectorAll('.decrease-btn');
         const increaseButtons = document.querySelectorAll('.increase-btn');
         const updateButtons = document.querySelectorAll('.update-cart');
+        const removeButtons = document.querySelectorAll('.remove-from-cart');
+        const csrfToken = '{{ csrf_token }}';
+        
+        // Function to update cart item quantity via AJAX
+        async function updateCartQuantity(itemId, quantity) {
+            try {
+                const url = '{% url "users:update_cart_ajax" %}';
+                
+                // Show loading state
+                const priceElement = document.querySelector(`.item-price[data-item-id="${itemId}"]`);
+                priceElement.classList.add('price-updating');
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        cart_item_id: itemId,
+                        quantity: quantity
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Update item total
+                    priceElement.textContent = '$' + data.item_total;
+                    
+                    // Update cart summary
+                    document.getElementById('subtotal').textContent = '$' + data.cart_subtotal;
+                    document.getElementById('tax').textContent = '$' + data.tax_amount;
+                    document.getElementById('shipping').textContent = '$' + data.shipping_cost;
+                    document.getElementById('total').textContent = '$' + data.grand_total;
+                } else {
+                    alert(data.message || 'Failed to update cart');
+                }
+                
+                // Remove loading state
+                priceElement.classList.remove('price-updating');
+                
+            } catch (error) {
+                console.error('Error updating cart:', error);
+                alert('Failed to update cart. Please try again.');
+            }
+        }
         
         // Decrease quantity
         decreaseButtons.forEach(button => {
@@ -392,8 +427,9 @@
                 const currentValue = parseInt(input.value);
                 
                 if (currentValue > 1) {
-                    input.value = currentValue - 1;
-                    updateItemTotal(itemId);
+                    const newValue = currentValue - 1;
+                    input.value = newValue;
+                    updateCartQuantity(itemId, newValue);
                 }
             });
         });
@@ -407,95 +443,44 @@
                 const currentValue = parseInt(input.value);
                 
                 if (currentValue < maxStock) {
-                    input.value = currentValue + 1;
-                    updateItemTotal(itemId);
+                    const newValue = currentValue + 1;
+                    input.value = newValue;
+                    updateCartQuantity(itemId, newValue);
                 }
             });
         });
         
-        // Update when input changes
+        // Update when input changes directly
         quantityInputs.forEach(input => {
             input.addEventListener('change', function() {
                 const itemId = this.getAttribute('data-item-id');
-                updateItemTotal(itemId);
+                const maxStock = parseInt(this.getAttribute('data-max-stock')) || 999;
+                let value = parseInt(this.value);
+                
+                // Validate input
+                if (isNaN(value) || value < 1) {
+                    value = 1;
+                } else if (value > maxStock) {
+                    value = maxStock;
+                }
+                
+                // Update the input with validated value
+                this.value = value;
+                
+                // Update cart in database
+                updateCartQuantity(itemId, value);
             });
         });
         
-        // Update cart items
-        updateButtons.forEach(button => {
+        // Remove item from cart
+        removeButtons.forEach(button => {
             button.addEventListener('click', function() {
-                const itemId = this.getAttribute('data-item-id');
-                const form = document.querySelector(`.quantity-update-form input[data-item-id="${itemId}"]`).closest('form');
-                
-                // Add visual feedback
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                this.disabled = true;
-                
-                form.submit();
+                if (confirm('Are you sure you want to remove this item from your cart?')) {
+                    const itemId = this.getAttribute('data-item-id');
+                    document.getElementById(`remove-form-${itemId}`).submit();
+                }
             });
         });
-        
-        // Function to update item total and cart subtotal
-        function updateItemTotal(itemId) {
-            const input = document.querySelector(`.item-quantity[data-item-id="${itemId}"]`);
-            const quantity = parseInt(input.value);
-            const price = parseFloat(input.getAttribute('data-price'));
-            const itemTotal = (quantity * price).toFixed(2);
-            
-            // Update item total with visual feedback
-            const itemTotalElement = document.querySelector(`.item-price[data-item-id="${itemId}"]`);
-            itemTotalElement.classList.add('price-updating');
-            setTimeout(() => {
-                itemTotalElement.textContent = '$' + itemTotal;
-                itemTotalElement.classList.remove('price-updating');
-            }, 100);
-            
-            // Calculate new subtotal
-            let subtotal = 0;
-            quantityInputs.forEach(input => {
-                const qty = parseInt(input.value);
-                const prc = parseFloat(input.getAttribute('data-price'));
-                subtotal += qty * prc;
-            });
-            
-            // Update order summary
-            document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
-            
-            // Update tax (8% tax rate)
-            const taxAmount = subtotal * 0.08;
-            document.getElementById('tax').textContent = '$' + taxAmount.toFixed(2);
-            
-            // Get shipping cost
-            const shippingText = document.getElementById('shipping').textContent;
-            const shipping = parseFloat(shippingText.replace('$', '')) || 5.00;
-            
-            // Update total
-            const total = subtotal + taxAmount + shipping;
-            document.getElementById('total').textContent = '$' + total.toFixed(2);
-        }
-        
-        // Add to wishlist success message
-        if (window.location.search.includes('wishlist_added=true')) {
-            const toast = document.createElement('div');
-            toast.className = 'position-fixed bottom-0 end-0 p-3';
-            toast.style.zIndex = '5';
-            toast.innerHTML = `
-                <div class="toast show bg-success text-white" role="alert">
-                    <div class="toast-header">
-                        <strong class="me-auto">Success</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">
-                        Product added to your wishlist!
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
     });
 </script>
 {% endblock %}

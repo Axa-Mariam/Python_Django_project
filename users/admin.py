@@ -137,9 +137,9 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(PaymentInfo)
 class PaymentInfoAdmin(admin.ModelAdmin):
-    list_display = ('order', 'transaction_id', 'payment_status', 'payment_date', 'cardholder_name')
-    search_fields = ('transaction_id', 'order__id', 'cardholder_name')
-    list_filter = ('payment_status', 'payment_date')
+    list_display = ['order', 'transaction_id', 'payment_status', 'payment_date', 'cardholder_name']  # Fix here
+    search_fields = ['order__id', 'transaction_id', 'cardholder_name']  # Fix here
+    list_filter = ['payment_status', 'payment_date']
     readonly_fields = ('payment_date',)
     
     # For security reasons, let's mask the card number in the admin

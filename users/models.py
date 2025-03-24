@@ -187,7 +187,7 @@ class ProductDiscount(models.Model):
 
 
 class CartItem(models.Model):
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='cart_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -197,7 +197,7 @@ class CartItem(models.Model):
         unique_together = ('user', 'product')
     
     def __str__(self):
-        return f"{self.user.username}'s cart: {self.product.name} x {self.quantity}"
+        return f"{self.quantity} x {self.product.name}"
     
     def get_total(self):
         return self.product.get_discount_price() * self.quantity
@@ -209,61 +209,71 @@ class Order(models.Model):
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled'),
+        ('cancelled', 'Cancelled')
     ]
     
-    PAYMENT_CHOICES = [
-        ('cod', 'Cash On Delivery'),
+    PAYMENT_METHOD_CHOICES = [
         ('card', 'Credit/Debit Card'),
         ('paypal', 'PayPal'),
+        ('cod', 'Cash on Delivery')
     ]
     
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='orders')
+    
+    # Payment and total information
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('5.00'))
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
+    
+    # Payment details
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES, default='cod')
     payment_status = models.BooleanField(default=False)
     
-    # Shipping details
+    # Shipping information
     shipping_address = models.TextField()
     shipping_city = models.CharField(max_length=100)
     shipping_country = models.CharField(max_length=100)
     shipping_postal_code = models.CharField(max_length=20)
-    tracking_number = models.CharField(max_length=50, blank=True, null=True)
     
+    # Order status
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"Order {self.id} - {self.user.username} ({self.status})"
+        return f"Order #{self.id} - {self.user.username}"
     
     class Meta:
         ordering = ['-created_at']
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Price at the time of purchase
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.PositiveIntegerField()
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     
     def __str__(self):
-        return f"{self.product.name} ({self.quantity}) in Order {self.order.id}"
+        return f"{self.quantity} x {self.product.name}"
     
-    def get_total(self):
-        return self.price * self.quantity
+    def save(self, *args, **kwargs):
+        # Auto-calculate total if not set
+        if not self.total:
+            self.total = self.price * self.quantity
+        super().save(*args, **kwargs)
 
 
 class PaymentInfo(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
-    transaction_id = models.CharField(max_length=100, blank=True, null=True)
-    payment_date = models.DateTimeField(auto_now_add=True)
-    
-    # For demo payment gateway (minimal fields)
-    card_number = models.CharField(max_length=16, blank=True, null=True)
-    card_expiry = models.CharField(max_length=7, blank=True, null=True)
+    transaction_id = models.CharField(max_length=100, unique=True)
+    card_number = models.CharField(max_length=4, blank=True, null=True)  # Last 4 digits only
     cardholder_name = models.CharField(max_length=100, blank=True, null=True)
     payment_status = models.BooleanField(default=False)
+    payment_date = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"Payment for Order {self.order.id}"
+        return f"Payment for Order #{self.order.id}"

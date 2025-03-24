@@ -320,6 +320,13 @@
                 <div class="modal-body">
                     <p>Are you sure you want to cancel your order?</p>
                     <p class="text-muted">This action cannot be undone. If the order has been shipped, you may not be able to cancel it.</p>
+                    
+                    {% if order.payment_status %}
+                    <div class="alert alert-info mt-2">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> If payment has been made, it will be automatically refunded within 3-4 working days.
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>

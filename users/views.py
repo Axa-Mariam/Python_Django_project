@@ -10,6 +10,7 @@ from django.conf import settings
 import uuid
 from decimal import Decimal
 from django.utils.text import slugify
+import json
 
 from .forms import (
     UserRegistrationForm, UserLoginForm, UserProfileUpdateForm, 
@@ -84,6 +85,8 @@ def dashboard(request):
     
     # Add cart count
     context['cart_count'] = user.get_cart_count()
+    
+    context['unread_notifications_count'] = user.notifications.filter(read=False).count()
     
     return render(request, 'users/dashboard.html', context)
 
@@ -405,23 +408,83 @@ def updateCart(request, cart_item_id):
     return redirect('users:cart')
 
 @login_required
+def updateCartAjax(request):
+    """Update cart item quantity via AJAX and return updated totals"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            cart_item_id = data.get('cart_item_id')
+            quantity = data.get('quantity')
+            
+            # Validation
+            if not cart_item_id or not quantity:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Missing cart item ID or quantity'
+                }, status=400)
+            
+            # Convert to integers
+            cart_item_id = int(cart_item_id)
+            quantity = int(quantity)
+            
+            # Get cart item
+            cart_item = get_object_or_404(CartItem, id=cart_item_id, user=request.user)
+            
+            # Check stock
+            if quantity > cart_item.product.stock:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Only {cart_item.product.stock} items available'
+                }, status=400)
+            
+            # Update quantity
+            cart_item.quantity = quantity
+            cart_item.save()
+            
+            # Calculate new totals
+            item_total = cart_item.get_total()
+            cart_items = CartItem.objects.filter(user=request.user)
+            cart_subtotal = sum(item.get_total() for item in cart_items)
+            tax_amount = cart_subtotal * Decimal('0.08')
+            shipping_cost = Decimal('5.00')
+            grand_total = cart_subtotal + tax_amount + shipping_cost
+            
+            # Return updated values
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Cart updated successfully',
+                'item_total': str(item_total),
+                'cart_subtotal': str(cart_subtotal),
+                'tax_amount': str(tax_amount.quantize(Decimal('0.01'))),
+                'shipping_cost': str(shipping_cost),
+                'grand_total': str(grand_total.quantize(Decimal('0.01')))
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    }, status=400)
+
+@login_required
 def cart(request):
-    """Display the user's cart"""
+    """Display and manage shopping cart"""
     cart_items = CartItem.objects.filter(user=request.user)
-    cart_total = sum(item.get_total() for item in cart_items)
     
-    # Calculate tax (8%)
-    tax_amount = cart_total * Decimal('0.08')
-    
-    # Add shipping cost
+    # Calculate totals
+    cart_subtotal = sum(item.get_total() for item in cart_items)
+    tax_amount = cart_subtotal * Decimal('0.08')
     shipping_cost = Decimal('5.00')
-    
-    # Calculate grand total
-    grand_total = cart_total + tax_amount + shipping_cost
+    grand_total = cart_subtotal + tax_amount + shipping_cost
     
     context = {
         'cart_items': cart_items,
-        'cart_total': cart_total,
+        'cart_subtotal': cart_subtotal,
         'tax_amount': tax_amount,
         'shipping_cost': shipping_cost,
         'grand_total': grand_total,
@@ -439,102 +502,121 @@ def checkout(request):
         messages.error(request, 'Your cart is empty.')
         return redirect('users:cart')
     
-    # Calculate cart total
-    cart_total = sum(item.get_total() for item in cart_items)
-    
-    # Calculate tax (8%)
-    tax_amount = cart_total * Decimal('0.08')
-    
-    # Add shipping cost
+    # Calculate cart total from database
+    cart_subtotal = sum(item.get_total() for item in cart_items)
+    tax_amount = cart_subtotal * Decimal('0.08')
     shipping_cost = Decimal('5.00')
-    
-    # Calculate grand total
-    grand_total = cart_total + tax_amount + shipping_cost
+    grand_total = cart_subtotal + tax_amount + shipping_cost
     
     if request.method == 'POST':
-        shipping_form = ShippingAddressForm(request.POST, user=request.user)
-        payment_form = PaymentMethodForm(request.POST)
+        # Get shipping details
+        use_profile_address = request.POST.get('use_profile_address') == 'True'
         
-        if shipping_form.is_valid() and payment_form.is_valid():
-            # Get shipping details
-            use_profile_address = shipping_form.cleaned_data.get('use_profile_address')
+        if use_profile_address:
+            # Use address from user profile
+            shipping_address = request.user.address
+            shipping_city = request.user.city
+            shipping_country = request.user.country
+            shipping_postal_code = request.user.postal_code
+        else:
+            # Use provided shipping address
+            shipping_address = request.POST.get('shipping_address')
+            shipping_city = request.POST.get('shipping_city')
+            shipping_country = request.POST.get('shipping_country')
+            shipping_postal_code = request.POST.get('shipping_postal_code')
             
-            if use_profile_address:
-                # Use address from user profile
-                shipping_address = request.user.address
-                shipping_city = request.user.city
-                shipping_country = request.user.country
-                shipping_postal_code = request.user.postal_code
-            else:
-                # Use provided shipping address
-                shipping_address = shipping_form.cleaned_data.get('shipping_address')
-                shipping_city = shipping_form.cleaned_data.get('shipping_city')
-                shipping_country = shipping_form.cleaned_data.get('shipping_country')
-                shipping_postal_code = shipping_form.cleaned_data.get('shipping_postal_code')
-            
-            # Get payment method
-            payment_method = payment_form.cleaned_data.get('payment_method')
-            
-            # Create order
-            order = Order.objects.create(
-                user=request.user,
-                total_amount=cart_total,
-                payment_method=payment_method,
-                shipping_address=shipping_address,
-                shipping_city=shipping_city,
-                shipping_country=shipping_country,
-                shipping_postal_code=shipping_postal_code,
+            # Basic validation
+            if not shipping_address or not shipping_city or not shipping_country or not shipping_postal_code:
+                messages.error(request, 'Please complete all shipping address fields')
+                return redirect('users:checkout')
+        
+        # Get payment method
+        payment_method = request.POST.get('payment_method')
+        
+        # Create order - Now with all needed fields
+        order = Order.objects.create(
+            user=request.user,
+            subtotal=cart_subtotal,
+            tax_amount=tax_amount,
+            shipping_cost=shipping_cost,
+            total_amount=grand_total,
+            payment_method=payment_method,
+            shipping_address=shipping_address,
+            shipping_city=shipping_city,
+            shipping_country=shipping_country,
+            shipping_postal_code=shipping_postal_code,
+            status='pending'
+        )
+        
+        # Create order items
+        for cart_item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=cart_item.product,
+                price=cart_item.product.get_discount_price(),
+                quantity=cart_item.quantity,
+                total=cart_item.get_total()
             )
             
-            # Create order items
-            for cart_item in cart_items:
-                OrderItem.objects.create(
-                    order=order,
-                    product=cart_item.product,
-                    price=cart_item.product.get_discount_price(),
-                    quantity=cart_item.quantity
-                )
-                
-                # Update product stock
-                product = cart_item.product
-                product.stock -= cart_item.quantity
-                if product.stock <= 0:
-                    product.is_available = False
-                product.save()
+            # Update product stock
+            product = cart_item.product
+            product.stock -= cart_item.quantity
+            if product.stock <= 0:
+                product.is_available = False
+            product.save()
+        
+        # Process based on payment method
+        if payment_method == 'cod':
+            order.status = 'processing'
+            order.save()
+            create_notification(
+                user=request.user,
+                title="Order Placed Successfully",
+                message=f"Your order #{order.id} has been placed successfully. Payment will be collected on delivery.",
+                notification_type='success'
+            )
+        elif payment_method == 'card':
+            card_number = request.POST.get('card_number', '')
+            card_holder_name = request.POST.get('card_holder_name', '')
             
-            # Store order ID in session for payment processing
-            request.session['order_id'] = order.id
+            # Simple validation
+            if not card_number or not card_holder_name:
+                messages.error(request, 'Please complete all card details')
+                return redirect('users:checkout')
             
-            # Clear the cart after order creation
-            cart_items.delete()
+            # Create payment record
+            PaymentInfo.objects.create(
+                order=order,
+                transaction_id=f"TXN-{order.id}-{timezone.now().strftime('%Y%m%d')}",
+                card_number=card_number[-4:],  # Store last 4 digits only
+                cardholder_name=card_holder_name,
+                payment_status=True
+            )
             
-            # If payment method is COD, mark as pending and redirect to confirmation
-            if payment_method == 'cod':
-                order.status = 'processing'
-                order.save()
-                create_notification(
-                    user=request.user,
-                    title="Order Placed Successfully",
-                    message=f"Your order #{order.id} has been placed successfully. Payment will be collected on delivery.",
-                    notification_type='success'
-                )
-                messages.success(request, 'Your order has been placed successfully!')
-                return redirect('users:order_confirmation', order_id=order.id)
-            else:
-                # Redirect to payment page for card/PayPal
-                return redirect('users:payment', payment_method=payment_method)
-    else:
-        shipping_form = ShippingAddressForm(user=request.user)
-        payment_form = PaymentMethodForm()
+            # Update order status
+            order.payment_status = True
+            order.status = 'processing'
+            order.save()
+            
+            create_notification(
+                user=request.user,
+                title="Payment Successful",
+                message=f"Payment for order #{order.id} has been processed successfully.",
+                notification_type='success'
+            )
+        
+        # Clear the cart after order creation
+        cart_items.delete()
+        
+        messages.success(request, 'Your order has been placed successfully!')
+        return redirect('users:order_confirmation', order_id=order.id)
     
     context = {
         'cart_items': cart_items,
-        'cart_total': cart_total,
+        'cart_subtotal': cart_subtotal,
         'tax_amount': tax_amount,
         'shipping_cost': shipping_cost,
         'grand_total': grand_total,
-        'shipping_form': shipping_form,
-        'payment_form': payment_form,
     }
     
     return render(request, 'users/checkout.html', context)
@@ -555,13 +637,13 @@ def payment(request, payment_method):
             form = CreditCardPaymentForm(request.POST)
             if form.is_valid():
                 # Process credit card payment (demo only)
-                payment = form.save(commit=False)
-                payment.order = order
-                
-                # Generate a fake transaction ID
-                payment.transaction_id = f"TXN-{uuid.uuid4().hex[:12].upper()}"
-                payment.payment_status = True
-                payment.save()
+                payment = PaymentInfo.objects.create(
+                    order=order,
+                    transaction_id=f"TXN-{uuid.uuid4().hex[:12].upper()}",
+                    card_number=form.cleaned_data.get('card_number')[-4:],  # Store last 4 digits only
+                    card_holder_name=form.cleaned_data.get('card_holder_name'),
+                    payment_status=True
+                )
                 
                 # Update order status
                 order.payment_status = True
@@ -577,7 +659,7 @@ def payment(request, payment_method):
                 
                 messages.success(request, 'Payment processed successfully!')
                 
-                # Clear session
+                # Clear cart and session
                 if 'order_id' in request.session:
                     del request.session['order_id']
                 
@@ -593,11 +675,7 @@ def payment(request, payment_method):
         return render(request, 'users/payment_card.html', context)
     
     elif payment_method == 'paypal':
-        # Demo PayPal integration
-        # In a real application, this would redirect to PayPal
-        # For this demo, we'll simulate a successful PayPal payment
-        
-        # Create payment record
+        # Demo PayPal integration - immediately process as successful
         payment = PaymentInfo.objects.create(
             order=order,
             transaction_id=f"PP-{uuid.uuid4().hex[:10].upper()}",
@@ -624,9 +702,22 @@ def payment(request, payment_method):
         
         return redirect('users:order_confirmation', order_id=order.id)
     
-    else:
-        messages.error(request, 'Invalid payment method.')
-        return redirect('users:checkout')
+    else:  # cod (Cash on Delivery)
+        order.status = 'processing'
+        order.save()
+        
+        create_notification(
+            user=request.user,
+            title="Order Placed Successfully",
+            message=f"Your order #{order.id} has been placed successfully. Payment will be collected on delivery.",
+            notification_type='success'
+        )
+        
+        # Clear session
+        if 'order_id' in request.session:
+            del request.session['order_id']
+        
+        return redirect('users:order_confirmation', order_id=order.id)
 
 @login_required
 def orderConfirmation(request, order_id):
@@ -677,6 +768,39 @@ def orderDetail(request, order_id):
     }
     
     return render(request, 'users/order_detail.html', context)
+
+@login_required
+def cancelOrder(request, order_id):
+    """Cancel an order"""
+    if request.method == 'POST':
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+        
+        # Only allow cancellation if order is not delivered or already canceled
+        if order.status in ['pending', 'processing', 'shipped']:
+            # Update order status
+            order.status = 'cancelled'
+            order.save()
+            
+            # Return items to stock
+            order_items = order.items.all()
+            for item in order_items:
+                product = item.product
+                product.stock += item.quantity
+                product.is_available = True
+                product.save()
+            
+            create_notification(
+                user=request.user,
+                title="Order Cancelled",
+                message=f"Your order #{order.id} has been cancelled successfully.",
+                notification_type='info'
+            )
+            
+            messages.info(request, f'Order #{order.id} has been cancelled successfully.')
+        else:
+            messages.error(request, 'This order cannot be cancelled.')
+    
+    return redirect('users:order_detail', order_id=order_id)
 
 @login_required
 def toggleWishlist(request, product_id):
