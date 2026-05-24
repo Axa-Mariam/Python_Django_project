@@ -1,1 +1,1 @@
-web: gunicorn KE-AXA.wsgi
+web: gunicorn website.wsgi
