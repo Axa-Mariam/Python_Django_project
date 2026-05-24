@@ -56,10 +56,6 @@ class CategoryAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     actions = ['initialize_sports_data']
     
-    def initialize_sports_data(self, request, queryset):
-        count = create_sample_sports_data()
-        self.message_user(request, f"Successfully created {count} sample sports products.")
-    initialize_sports_data.short_description = "Initialize sample sports data"
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
